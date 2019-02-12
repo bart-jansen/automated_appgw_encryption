@@ -1,0 +1,19 @@
+{
+    "name": "request-certificate",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "assert": "^1.4.1",
+        "async": "^2.6.1",
+        "crypto": "^1.0.1",
+        "safetydance": "^0.7.1",
+        "superagent": "^4.1.0",
+        "underscore": "^1.9.1"
+    }
+}
