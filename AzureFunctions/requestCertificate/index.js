@@ -59,6 +59,7 @@ module.exports = function (context, req) {
                 return callback(null, response.headers['Replay-Nonce'.toLowerCase()]);
             });
         }
+
         sendSignedRequest(url, payload, callback) {
             assert.strictEqual(typeof url, 'string');
             assert.strictEqual(typeof payload, 'string');
@@ -108,8 +109,8 @@ module.exports = function (context, req) {
                 });
             });
         }
-        updateCont
-        act(registrationUri, callback) {
+
+        updateContact(registrationUri, callback) {
             assert.strictEqual(typeof registrationUri, 'string');
             assert.strictEqual(typeof callback, 'function');
 
@@ -131,6 +132,7 @@ module.exports = function (context, req) {
                 callback();
             });
         }
+
         registerUser(callback) {
             assert.strictEqual(typeof callback, 'function');
 
@@ -152,6 +154,7 @@ module.exports = function (context, req) {
                 that.updateContact(result.headers.location, callback);
             });
         }
+
         getKeyAuthorization(token) {
             assert(util.isBuffer(this.accountKeyPem));
 
@@ -167,6 +170,7 @@ module.exports = function (context, req) {
 
             return token + '.' + thumbprint;
         }
+
         prepareHttpChallenge(hostname, domain, authorization, callback) {
             assert.strictEqual(typeof hostname, 'string');
             assert.strictEqual(typeof domain, 'string');
@@ -191,6 +195,7 @@ module.exports = function (context, req) {
                 callback(null, challenge);
             });
         }
+        
         prepareChallenge(hostname, domain, authorizationUrl, callback) {
             assert.strictEqual(typeof hostname, 'string');
             assert.strictEqual(typeof domain, 'string');
