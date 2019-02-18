@@ -20,11 +20,11 @@ az storage account create --name myStorage --location westeurope --resource-grou
 ```
 Create a Linux-based B1 SKU AppService plan:
 ```
-az appservice plan create -g myResourceGroup -n myPlan --is-linux  --sku B1
+az appservice plan create -n myPlan -g myResourceGroup  --is-linux  --sku B1
 ```
 Create Linux & Node-based Azure Function
 ```
-az functionapp create --resource-group myResourceGroup --consumption-plan-location westeurope --name myFunc --storage-account myStorage --runtime node --os-type Linux
+az functionapp create -n myFunc --resource-group myResourceGroup -c westeurope  --storage-account myStorage --runtime node --os-type Linux
 ```
 
 ## Publish code

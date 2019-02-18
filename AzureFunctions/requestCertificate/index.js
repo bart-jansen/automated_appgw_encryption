@@ -8,6 +8,8 @@ let assert = require('assert'),
     util = require('util'),
     _ = require('underscore');
 
+let ApplyCertificate = require('./ApplyCertificate');
+
 const paths = {
     ACME_CHALLENGES_DIR: './',
     ACME_ACCOUNT_KEY_FILE: './acme.key',
@@ -509,6 +511,19 @@ module.exports = function (context, req) {
                 });
             });
         }
+
+        convertCertificate(cert, key, pfx, callback) {
+            assert.strictEqual(typeof cert, 'string');
+            assert.strictEqual(typeof key, 'string');
+            assert.strictEqual(typeof pfx, 'string');
+            assert.strictEqual(typeof callback, 'function');
+
+            let randomCertPass  = Math.random().toString(36).slice(-8);
+
+            safe.child_process.execSync('openssl pkcs12 -export -out ' + pfx + ' -inkey ' + key + ' -in ' + cert + ' -passout pass:' + randomCertPass)
+            
+            callback(null, pfx, randomCertPass)
+        }
     }
 
     if (req.body && req.body.domain && req.body.hostname) {
@@ -533,8 +548,35 @@ module.exports = function (context, req) {
                 context.log(cert);
                 context.log('got key');
                 context.log(key);
-                // context.res = {status: 200};
-                // context.done();
+
+                acme.convertCertificate(cert, key, 'appgw.pfx', function (err, pfx, randomCertPass) {
+                    let deployCert = new ApplyCertificate({
+                        // subscriptionId: ''
+                        rgName: 'appgw',
+                        appgwName: 'appgw',
+                        certPath: pfx,
+                        certPwd: randomCertPass,
+                        certName:'appgw-cert'
+                    });
+
+                    deployCert.applyCertFlow(function(err) {
+                        if(err) {
+                            context.log('error');
+                            context.log(err);
+                            // context.res = { status: 200 };
+                            // context.done();
+                        }
+                        else {
+                            context.log('successfully deployed certificate')
+
+                            // context.res = {status: 200};
+                            // context.done();
+                        }
+
+                    })
+
+                });
+              
             }
         });
     }
