@@ -18,13 +18,23 @@ Create an Azure Storage account
 ```
 az storage account create --name myStorage --location westeurope --resource-group myResourceGroup --sku Standard_LRS
 ```
-Create a Linux-based B1 SKU AppService plan:
+Create a Linux-based B1 SKU AppService plan (Consumer-based plans currently don't support MSI):
 ```
 az appservice plan create -n myPlan -g myResourceGroup  --is-linux  --sku B1
 ```
 Create Linux & Node-based Azure Function
 ```
 az functionapp create -n myFunc --resource-group myResourceGroup -c westeurope  --storage-account myStorage --runtime node --os-type Linux
+```
+
+## Configure resources
+Enable System-Designed Managed Service Identity on Function App:
+```
+az webapp identity assign --name myFunc --resource-group myResourceGroup
+```
+The above statement returns a **principalId** which is required in the next command to enable the function app to alter other resources in the resource group (i.e. apply the issued SSL-certificate to the Application Gateway):
+```
+az role assignment create --role Owner --assignee-object-id <<principalId>>
 ```
 
 ## Publish code
