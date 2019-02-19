@@ -87,7 +87,7 @@ az network public-ip show \
 ```
 
 Now point your browser to the IP (e.g. mydnslabel.westeurope.cloudapp.azure.com) and it will should show the result below alternating between the different VMs in the scale set when refreshing
-
+![](../img/app-gw-browser.png)
 
 ## Configure letsencrypt routing
 To setup routing to complete the letsencrypt challenge, path-based application gateway routing needs to be setup by creating a new rule and applying that rule to the existing port 80 HTTPListener
