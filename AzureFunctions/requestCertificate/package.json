@@ -12,6 +12,7 @@
         "assert": "^1.4.1",
         "async": "^2.6.1",
         "azure-arm-network": "^11.1.0",
+        "azure-keyvault": "^3.0.4",
         "crypto": "^1.0.1",
         "ms-rest-azure": "^2.6.0",
         "safetydance": "^0.7.1",

@@ -6,7 +6,9 @@ let assert = require('assert'),
     safe = require('safetydance'),
     superagent = require('superagent'),
     util = require('util'),
-    _ = require('underscore');
+    _ = require('underscore'),
+    KeyVault = require('azure-keyvault'),
+    msRestAzure = require('ms-rest-azure');
 
 let ApplyCertificate = require('./ApplyCertificate');
 
@@ -46,6 +48,7 @@ module.exports = function (context, req) {
             assert.strictEqual(typeof options, 'object');
             this.accountKeyPem = null; // Buffer
             this.email = options.email;
+            this.keyVaultUri = `https://${options.keyVaultName}.vault.azure.net/`;
             this.keyId = null;
             this.caDirectory = options.prod ? CA_PROD_DIRECTORY_URL : CA_STAGING_DIRECTORY_URL;
             this.directory = {};
@@ -190,11 +193,35 @@ module.exports = function (context, req) {
             context.log('prepareHttpChallenge: preparing for challenge %j', challenge);
             let keyAuthorization = this.getKeyAuthorization(challenge.token);
 
-            context.log('prepareHttpChallenge: writing %s to %s', keyAuthorization, path.join(paths.ACME_CHALLENGES_DIR, challenge.token));
-            fs.writeFile(path.join(paths.ACME_CHALLENGES_DIR, challenge.token), keyAuthorization, function (error) {
-                if (error)
-                    return callback(error);
-                callback(null, challenge);
+
+            this.storeChallengeInKeyVault(challenge, keyAuthorization, callback);
+            // context.log('prepareHttpChallenge: writing %s to %s', keyAuthorization, path.join(paths.ACME_CHALLENGES_DIR, challenge.token));
+            // fs.writeFile(path.join(paths.ACME_CHALLENGES_DIR, challenge.token), keyAuthorization, function (error) {
+                // if (error)
+                    // return callback(error);
+                // callback(null, challenge);
+            // });
+        }
+
+        storeChallengeInKeyVault(challenge, secretData, callback) {
+            assert.strictEqual(typeof challenge, 'object');
+            assert.strictEqual(typeof secretData, 'string');
+            assert.strictEqual(typeof callback, 'function');
+
+            msRestAzure.loginWithAppServiceMSI({resource: 'https://vault.azure.net'}).then(credentials => {
+                const keyVaultClient = new KeyVault.KeyVaultClient(credentials);
+                
+                keyVaultClient.setSecret(this.keyVaultUri, secretName, secretData, {})
+                    .then(kvSecretBundle => {
+                        context.log("KeyVaultSecret id: '" + kvSecretBundle.id + "'.");
+                        callback(null, challenge);
+                    })
+                    .catch(err => {
+                        callback('error storing keyvault secret ' + err)
+                    });
+            })
+            .catch(err => {
+                callback('error logging in via MSI ' + err)
             });
         }
         
@@ -431,7 +458,8 @@ module.exports = function (context, req) {
 
             context.log('cleanupHttpChallenge: unlinking %s', path.join(paths.ACME_CHALLENGES_DIR, challenge.token));
 
-            fs.unlink(path.join(paths.ACME_CHALLENGES_DIR, challenge.token), callback);
+            // fs.unlink(path.join(paths.ACME_CHALLENGES_DIR, challenge.token), callback);
+            // todo: remove secret from keyvault
         }
 
         newOrder(domain, callback) {
@@ -530,6 +558,7 @@ module.exports = function (context, req) {
 
         let acme = new Acme2({
             email: 'bajansen@microsoft.com',
+            keyVaultName: 'acmelinuxsecrets',
             prod: false
         } || {});
 
