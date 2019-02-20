@@ -40,7 +40,7 @@ az network application-gateway create \
   --capacity 2 \
   --sku Standard_Medium \
   --http-settings-cookie-based-affinity Disabled \
-  --frontend-port 8080 \
+  --frontend-port 80 \
   --http-settings-port 80 \
   --http-settings-protocol Http \
   --public-ip-address myAGPublicIPAddress
@@ -90,26 +90,7 @@ Now point your browser to the IP (e.g. mydnslabel.westeurope.cloudapp.azure.com)
 ![](../img/app-gw-browser.png)
 
 ## Configure letsencrypt routing
-To setup routing to complete the letsencrypt challenge, path-based application gateway routing needs to be setup by creating a new rule and applying that rule to the existing port 80 HTTPListener.
-
-### Create new frontend HTTP port to listen to port 80
-```
-az network application-gateway frontend-port create \
-  --port 80 \
-  --gateway-name myAppGateway \
-  --resource-group myResourceGroup \
-  --name port80
-```
-
-### Create httpListener for port 80
-```
-az network application-gateway http-listener create \
-  --gateway-name myAppGateway \
-  --resource-group  myResourceGroup \ 
-  --frontend-port port80 \
-  --name httpListener
-```
-
+To setup routing to complete the letsencrypt challenge, path-based application gateway routing needs to be setup by modifying the existing rule for the port 80 HTTPListener.
 
 ### Create redirect-config
 Change the target-url to the URL of your Azure Function
@@ -134,16 +115,14 @@ az network application-gateway url-path-map create \
   --redirect-config letsencryptRedirect
 ```
 
-### Create redirect rule
+### Update existing rule
 ```
-az network application-gateway rule create \
+az network application-gateway rule update \
   --gateway-name myAppGateway \
-  --name rule2 \
+  --name rule1 \
   --resource-group myResourceGroup \
-  --http-listener httpListener \
   --rule-type PathBasedRouting \
-  --url-path-map letsencryptPath \
-  --address-pool appGatewayBackendPool
+  --url-path-map letsencryptPath
 ```
 
 
