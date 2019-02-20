@@ -1,5 +1,5 @@
 # Setup Application Gateway
-Follow the instructions below to setup an Application Gateway in Azure with an NGINX-based virtual machine scale set
+Follow the instructions below to setup an Application Gateway in Azure with an NGINX-based virtual machine scale set, more detailed information can be found [here](https://docs.microsoft.com/en-us/azure/application-gateway/tutorial-create-vmss-cli).
 
 ## Deploy resources
 ### Create resource group
@@ -24,7 +24,7 @@ az network vnet subnet create \
 ```
 
 ### Create public IP with DNS label
-Change **mydnslabel** to your unique FQDN (e.g. mydnslabel becomes mydnslabel.westeurope.cloudapp.azure.com) that you want to generate an automated SSL certificate for
+Change **mydnslabel** to your unique FQDN (e.g. mydnslabel becomes mydnslabel.westeurope.cloudapp.azure.com) that you want to generate an automated SSL certificate for. Note that this dnslabel needs to be unique.
 ```
 az network public-ip create -g myResourceGroup -n myAGPublicIPAddress --dns-name mydnslabel
 ```
@@ -40,7 +40,7 @@ az network application-gateway create \
   --capacity 2 \
   --sku Standard_Medium \
   --http-settings-cookie-based-affinity Disabled \
-  --frontend-port 80 \
+  --frontend-port 8080 \
   --http-settings-port 80 \
   --http-settings-protocol Http \
   --public-ip-address myAGPublicIPAddress
@@ -90,4 +90,61 @@ Now point your browser to the IP (e.g. mydnslabel.westeurope.cloudapp.azure.com)
 ![](../img/app-gw-browser.png)
 
 ## Configure letsencrypt routing
-To setup routing to complete the letsencrypt challenge, path-based application gateway routing needs to be setup by creating a new rule and applying that rule to the existing port 80 HTTPListener
+To setup routing to complete the letsencrypt challenge, path-based application gateway routing needs to be setup by creating a new rule and applying that rule to the existing port 80 HTTPListener.
+
+### Create new frontend HTTP port to listen to port 80
+```
+az network application-gateway frontend-port create \
+  --port 80 \
+  --gateway-name myAppGateway \
+  --resource-group myResourceGroup \
+  --name port80
+```
+
+### Create httpListener for port 80
+```
+az network application-gateway http-listener create \
+  --gateway-name myAppGateway \
+  --resource-group  myResourceGroup \ 
+  --frontend-port port80 \
+  --name httpListener
+```
+
+
+### Create redirect-config
+Change the target-url to the URL of your Azure Function
+```
+az network application-gateway redirect-config create \
+  --resource-group myResourceGroup \
+  --gateway-name myAppGateway \
+  --name letsencryptRedirect \
+  --type Permanent \
+  --include-query-string true \
+  --target-url https://google.com
+```
+
+### Create URL path map
+```
+az network application-gateway url-path-map create \
+  --gateway-name myAppGateway \
+  --name letsencryptPath \
+  --paths /.well-known/acme-challenge/* \
+  --resource-group myResourceGroup \
+  --rule-name letsencrypt \
+  --redirect-config letsencryptRedirect
+```
+
+### Create redirect rule
+```
+az network application-gateway rule create \
+  --gateway-name myAppGateway \
+  --name rule2 \
+  --resource-group myResourceGroup \
+  --http-listener httpListener \
+  --rule-type PathBasedRouting \
+  --url-path-map letsencryptPath \
+  --address-pool appGatewayBackendPool
+```
+
+
+Once the Azure Function requests and applies the SSL certificate, the Azure Functions automatically configures the AppGW to listen to port 443 (HTTPS) instead of port 80 for incoming requests.
