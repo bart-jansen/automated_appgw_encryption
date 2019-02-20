@@ -28,13 +28,17 @@ az functionapp create -n myFunc --resource-group myResourceGroup -c westeurope  
 ```
 
 ## Configure resources
-Enable System-Designed Managed Service Identity on Function App:
+Enable System-Assigned Managed Service Identity on the Function App:
 ```
 az webapp identity assign --name myFunc --resource-group myResourceGroup
 ```
-The above statement returns a **principalId** which is required in the next command to enable the function app to alter other resources in the resource group (i.e. apply the issued SSL-certificate to the Application Gateway):
+The above statement returns a **principalId** which is required in the next commands to enable the function app to alter other resources in the resource group (i.e. apply the issued SSL-certificate to the Application Gateway):
 ```
-az role assignment create --role Owner --assignee-object-id <<principalId>>
+az role assignment create --role Owner --assignee-object-id <PrincipalId>
+```
+That same principalId is also required to setup permissions for the earlier created KeyVault to read/write secrets and certificates:
+```
+az keyvault set-policy --name '<YourKeyVaultName>' --object-id <PrincipalId> --secret-permissions delete get list set --certificate-permissions create delete get list update
 ```
 
 ## Publish code
