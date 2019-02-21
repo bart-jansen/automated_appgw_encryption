@@ -4,7 +4,8 @@ const msRestAzure = require('ms-rest-azure');
 
 module.exports = function (context, req) {
     if(context && context.bindingData && context.bindingData.code && process.env.KEYVAULT_NAME) {
-        const secretName = context.bindingData.code;
+        //replace illegal chars for secret name in kv
+        let secretName = context.bindingData.code.replace(/([^a-z0-9-]+)/gi, '');
 
         context.log(`Checking for ACME challenge response at '${secretName}'...`);
 

@@ -201,6 +201,9 @@ module.exports = function (context, req) {
             assert.strictEqual(typeof secretData, 'string');
             assert.strictEqual(typeof callback, 'function');
 
+            //replace illegal chars for secret name in kv
+            let secretName = challenge.token.replace(/([^a-z0-9-]+)/gi, '');
+
             msRestAzure.loginWithAppServiceMSI({resource: 'https://vault.azure.net'}).then(credentials => {
                 const keyVaultClient = new KeyVault.KeyVaultClient(credentials);
                 

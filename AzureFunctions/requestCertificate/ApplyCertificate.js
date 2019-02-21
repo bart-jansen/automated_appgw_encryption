@@ -4,7 +4,7 @@ const msRestAzure = require('ms-rest-azure');
 const NetworkManagementClient = require('azure-arm-network');
 const fs = require('fs');
 
-export default class ApplyCertificate {
+module.exports = class ApplyCertificate {
     constructor (options) {
         this.subscriptionId = options.subscriptionId || (process.env.WEBSITE_OWNER_NAME ? process.env.WEBSITE_OWNER_NAME.split('+')[0] : '');
         this.rgName = options.rgName;
