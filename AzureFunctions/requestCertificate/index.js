@@ -554,7 +554,7 @@ module.exports = function (context, req) {
         let acme = new Acme2({
             email: process.env.EMAIL_CERT,
             keyVaultName: process.env.KEYVAULT_NAME,
-            prod: false
+            prod: true
         } || {});
 
         const CFG_HOSTNAME = process.env.APPGW_DOMAIN,
