@@ -13,7 +13,6 @@ let assert = require('assert'),
 let ApplyCertificate = require('./ApplyCertificate');
 
 const paths = {
-    ACME_CHALLENGES_DIR: './',
     ACME_ACCOUNT_KEY_FILE: './acme.key',
     APP_CERTS_DIR: './'
 };
@@ -195,12 +194,6 @@ module.exports = function (context, req) {
 
 
             this.storeChallengeInKeyVault(challenge, keyAuthorization, callback);
-            // context.log('prepareHttpChallenge: writing %s to %s', keyAuthorization, path.join(paths.ACME_CHALLENGES_DIR, challenge.token));
-            // fs.writeFile(path.join(paths.ACME_CHALLENGES_DIR, challenge.token), keyAuthorization, function (error) {
-                // if (error)
-                    // return callback(error);
-                // callback(null, challenge);
-            // });
         }
 
         storeChallengeInKeyVault(challenge, secretData, callback) {
@@ -456,7 +449,7 @@ module.exports = function (context, req) {
             assert.strictEqual(typeof challenge, 'object');
             assert.strictEqual(typeof callback, 'function');
 
-            context.log('cleanupHttpChallenge: unlinking %s', path.join(paths.ACME_CHALLENGES_DIR, challenge.token));
+            // context.log('cleanupHttpChallenge: unlinking %s', path.join(paths.ACME_CHALLENGES_DIR, challenge.token));
 
             // fs.unlink(path.join(paths.ACME_CHALLENGES_DIR, challenge.token), callback);
             // todo: remove secret from keyvault
@@ -554,23 +547,21 @@ module.exports = function (context, req) {
         }
     }
 
-    if (req.body && req.body.domain && req.body.hostname) {
-
+    if ('KEYVAULT_NAME','APPGW_DOMAIN','EMAIL_CERT','APPGW_NAME','APPGW_RG' in process.env) {
         let acme = new Acme2({
-            email: 'bajansen@microsoft.com',
-            keyVaultName: 'acmelinuxsecrets',
+            email: process.env.EMAIL_CERT,
+            keyVaultName: process.env.KEYVAULT_NAME,
             prod: false
         } || {});
 
-        const CFG_HOSTNAME = req.body.hostname,
-            CFG_DOMAIN = req.body.domain;
+        const CFG_HOSTNAME = process.env.APPGW_DOMAIN,
+            CFG_DOMAIN = process.env.APPGW_DOMAIN;
 
         acme.getCertificate(CFG_HOSTNAME, CFG_DOMAIN, function (err, cert, key) {
             if(err) {
-                context.log('error');
+                context.log('error with getting certificate');
                 context.log(err);
-                // context.res = { status: 200 };
-                // context.done();
+                context.done();
             }
             else {
                 context.log('got cert');
@@ -581,25 +572,22 @@ module.exports = function (context, req) {
                 acme.convertCertificate(cert, key, 'appgw.pfx', function (err, pfx, randomCertPass) {
                     let deployCert = new ApplyCertificate({
                         // subscriptionId: ''
-                        rgName: 'appgw',
-                        appgwName: 'appgw',
+                        rgName: process.env.APPGW_RG,
+                        appgwName: process.env.APPGW_NAME,
                         certPath: pfx,
                         certPwd: randomCertPass,
-                        certName:'appgw-cert'
+                        certName: 'appgw-cert'
                     });
 
                     deployCert.applyCertFlow(function(err) {
                         if(err) {
-                            context.log('error');
+                            context.log('error with applying certificate');
                             context.log(err);
-                            // context.res = { status: 200 };
-                            // context.done();
+                            context.done();
                         }
                         else {
                             context.log('successfully deployed certificate')
-
-                            // context.res = {status: 200};
-                            // context.done();
+                            context.done();
                         }
 
                     })
@@ -608,5 +596,9 @@ module.exports = function (context, req) {
               
             }
         });
+    }
+    else {
+        context.log('Not all environment variables are set');
+        context.done();
     }
 }

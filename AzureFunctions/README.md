@@ -41,6 +41,10 @@ That same principalId is also required to setup permissions for the earlier crea
 az keyvault set-policy --name '<YourKeyVaultName>' --object-id <PrincipalId> --secret-permissions delete get list set --certificate-permissions create delete get list update
 ```
 
+### Setup environment variables
+The Function App needs several variables set to communicate with KeyVault and Application Gateway. Go to Application Settings and add the appropriate values for the following variables `KEYVAULT_NAME`, `APPGW_DOMAIN`, `EMAIL_CERT`, `APPGW_NAME`, `APPGW_RG` as shown in the picture below:
+![](../img/functions-env-variables.png)
+
 ## Publish code
 Pull down this repository, cd into this directory and publish the Azure Functions to your newly created resource with:
 ```
