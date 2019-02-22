@@ -166,6 +166,18 @@ az network application-gateway http-listener create \
   --ssl-cert appgw-cert
 ```
 
+### Create rule to forward port 443 traffic to the backend pools
+```
+az network application-gateway rule create \
+  --resource-group myResourceGroup \
+  --gateway-name myAppGateway \
+  --name httpsRule \
+  --http-listener httpsListener \
+  --rule-type Basic \
+  --address-pool appGatewayBackendPool \
+  --http-settings appGatewayBackendHttpSettings
+```
+
 ### Create redirect-config for HTTP to HTTPS redirection
 ```
 az network application-gateway redirect-config create \
@@ -183,7 +195,7 @@ az network application-gateway url-path-map rule create \
   --gateway-name myAppGateway \
   --name httpToHttps \
   --path-map-name httpPath \
-  --paths /* \
+  --paths '/*' \
   --resource-group myResourceGroup \
   --redirect-config httpToHttpsRedirect
 ```
