@@ -101,14 +101,14 @@ az network application-gateway redirect-config create \
   --name letsencryptRedirect \
   --type Permanent \
   --include-query-string true \
-  --target-url https://google.com
+  --target-url https://acmefunction.azurewebsites.net/api/requestCertificate/
 ```
 
 ### Create URL path map
 ```
 az network application-gateway url-path-map create \
   --gateway-name myAppGateway \
-  --name letsencryptPath \
+  --name httpPath \
   --paths /.well-known/acme-challenge/* \
   --resource-group myResourceGroup \
   --rule-name letsencrypt \
@@ -122,8 +122,70 @@ az network application-gateway rule update \
   --name rule1 \
   --resource-group myResourceGroup \
   --rule-type PathBasedRouting \
-  --url-path-map letsencryptPath
+  --url-path-map httpPath
 ```
 
+## Setup port 443 (HTTPS) 
 
-Once the Azure Function requests and applies the SSL certificate, the Azure Functions automatically configures the AppGW to listen to port 443 (HTTPS) instead of port 80 for incoming requests.
+
+### Create self signed SSL certificate
+
+Before we apply the actual certificate, we configure application gateway with a self signed certificate which we can then later easily replace with a valid SSL certificate issued by letsencrypt. Below steps are using OpenSSL, if you're unable to use/install this you can also create a certificate using [cert-depot](https://www.cert-depot.com/).
+- Generate private key: `openssl genrsa 2048 > private.pem`
+- Generate self signed certificate: `openssl req -x509 -new -key private.pem -out public.pem`
+- Convert certificate to PFX format: `openssl pkcs12 -export -in public.pem -inkey private.pem -out mycert.pfx -passout pass:MySecretP@ss`
+
+For your password you can pick anything, please do make sure to memorize your chosen password as we need this in the next steps
+
+### Upload SSL certificate
+```
+az network application-gateway ssl-cert create \
+  --resource-group myResourceGroup \
+  --gateway-name myAppGateway \
+  --name appgw-cert \
+  --cert-file mycert.pfx \
+  --cert-password MySecretP@ss
+```
+
+### Create new frontend HTTPs port to listen to port 443
+```
+az network application-gateway frontend-port create \
+  --port 443 \
+  --gateway-name myAppGateway \
+  --resource-group myResourceGroup \
+  --name httpsPort
+```
+
+### Create httpListener for port 443 with certificate
+```
+az network application-gateway http-listener create \
+  --gateway-name myAppGateway \
+  --resource-group myResourceGroup \
+  --frontend-port httpsPort \
+  --name httpsListener \
+  --ssl-cert appgw-cert
+```
+
+### Create redirect-config for HTTP to HTTPS redirection
+```
+az network application-gateway redirect-config create \
+  --resource-group myResourceGroup \
+  --gateway-name myAppGateway \
+  --name httpToHttpsRedirect \
+  --type Permanent \
+  --include-query-string true \
+  --target-listener httpsListener
+```
+
+### Add URL path for HTTP to HTTPS redirection
+```
+az network application-gateway url-path-map rule create \
+  --gateway-name myAppGateway \
+  --name httpToHttps \
+  --path-map-name httpPath \
+  --paths /* \
+  --resource-group myResourceGroup \
+  --redirect-config httpToHttpsRedirect
+```
+
+Once the Azure Function requests and applies the working SSL certificate issued by letsencrypt, the Azure Functions automatically replaces the self signed certificate issued in these instructions.
