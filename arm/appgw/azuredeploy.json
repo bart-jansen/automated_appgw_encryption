@@ -37,7 +37,7 @@
     "resources": [{
         "type": "Microsoft.Network/publicIPAddresses",
         "name": "[variables('applicationGatewayPublicIpName')]",
-        "apiVersion": "2018-08-01",
+        "apiVersion": "2018-10-01",
         "location": "[resourceGroup().location]",
         "sku": {
             "name": "Basic"
@@ -188,6 +188,12 @@
                 {
                     "name": "httpPath",
                     "properties": {
+                        "defaultBackendAddressPool": {
+                            "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/appGatewayBackendPool')]"
+                        },
+                        "defaultBackendHttpSettings": {
+                            "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+                        },            
                         "pathRules":[
                             {
                                 "name": "letsencrypt",
@@ -211,7 +217,6 @@
                                     }
                                 }
                             }
-
                         ]
                     }
                 }
@@ -240,7 +245,7 @@
                     "properties": {
                         "redirectType": "Permanent",
                         "targetListener": {
-                            "id": "[concat(variables('applicationGatewayID'), '/httpListener/httpsListener')]"
+                            "id": "[concat(variables('applicationGatewayID'), '/httpListeners/httpsListener')]"
                         },
                         "includeQueryString": true,
                         "pathRules": [
