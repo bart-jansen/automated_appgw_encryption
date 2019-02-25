@@ -22,37 +22,6 @@
           "description": "Specifies the Azure Active Directory tenant ID that should be used for authenticating requests to the key vault. Get it by using Get-AzSubscription cmdlet."
         }
       },
-      "objectId": {
-        "type": "string",
-        "metadata": {
-          "description": "Specifies the object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. Get it by using Get-AzADUser or Get-AzADServicePrincipal cmdlets."
-        }
-      },
-      "certificatePermissions": {
-        "type": "array",
-        "defaultValue": [
-          "create",
-          "delete",
-          "get",
-          "list",
-          "update"
-        ],
-        "metadata": {
-          "description": "Specifies the permissions to certificates in the vault."
-        }
-      },
-      "secretPermissions": {
-        "type": "array",
-        "defaultValue": [
-            "delete",
-            "get",
-            "list",
-            "show"
-        ],
-        "metadata": {
-          "description": "Specifies the permissions to secrets in the vault."
-        }
-      },
       "skuName": {
         "type": "string",
         "defaultValue": "Standard",
@@ -73,25 +42,10 @@
         "location": "[parameters('location')]",
         "properties": {
           "tenantId": "[parameters('tenantId')]",
-          "accessPolicies": [
-            {
-              "objectId": "[parameters('objectId')]",
-              "tenantId": "[parameters('tenantId')]",
-              "permissions": {
-                "certificates": "[parameters('certificatePermissions')]",
-                "secrets": "[parameters('secretPermissions')]"      
-              }
-            }
-          ],
+          "accessPolicies": [],
           "sku": {
             "name": "[parameters('skuName')]",
             "family": "A"
-          },
-          "networkAcls": {
-            "value": {
-              "defaultAction": "Allow",
-              "bypass": "AzureServices"
-            }
           }
         }
       }
