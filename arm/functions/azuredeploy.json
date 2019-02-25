@@ -164,5 +164,15 @@
         }
       ]
     }
-  ]
+  ],
+  "outputs": {
+    "principalId": {
+      "value": "[reference(concat('Microsoft.Web/sites/', variables('functionAppName')), '2016-08-01', 'Full').identity.principalId]",
+      "type": "string"
+    },
+    "tenantId": {
+      "value": "[subscription().tenantId]",
+      "type": "string"
+    }
+  }
 }
