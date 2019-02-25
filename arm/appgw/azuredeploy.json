@@ -248,8 +248,7 @@
                                 "id": "[concat(variables('applicationGatewayID'), '/urlPathMaps/httpPath/pathRules/httpToHttps')]"
                             }
                         ]
-                    },
-                    "type": "Microsoft.Network/applicationGateways/redirectConfigurations"
+                    }
                 }
             ]
         },
