@@ -69,16 +69,20 @@
     },
     {
       "type": "Microsoft.Web/serverfarms",
-      "apiVersion": "2015-04-01",
+      "apiVersion": "2018-02-01",
       "name": "[variables('hostingPlanName')]",
       "location": "[parameters('location')]",
       "kind": "linux",
       "properties": {
         "name": "[variables('hostingPlanName')]",
-        "sku": "Standard",
-        "workerSize": "0",
-        "hostingEnvironment": "",
-        "numberOfWorkers": 1
+        "reserved": true
+      },
+      "sku": {
+        "name": "B1",
+        "tier": "Basic",
+        "size": "B1",
+        "family": "B",
+        "capacity": 1
       }
     },
     {
@@ -86,7 +90,7 @@
       "type": "Microsoft.Web/sites",
       "name": "[variables('functionAppName')]",
       "location": "[parameters('location')]",
-      "kind": "functionapp,linux,docker",
+      "kind": "functionapp,linux,container",
       "identity": {
         "type": "SystemAssigned"
       },    
@@ -95,6 +99,8 @@
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "hostingEnvironment": "",
         "clientAffinityEnabled": false,
+        "reserved": true,
+        "containerSize": 1536,
         "siteConfig": {
           "alwaysOn": true,
           "appSettings": [
