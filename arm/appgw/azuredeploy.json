@@ -32,7 +32,7 @@
         "applicationGatewayPublicIpName": "appgwpublicip",
         "applicationGatewayPublicIpId": "[resourceId('Microsoft.Network/publicIPAddresses',variables('applicationGatewayPublicIpName'))]",
         "applicationGatewayId": "[resourceId('Microsoft.Network/applicationGateways', variables('applicationGatewayName'))]",
-        "azureFunctionReqUrl": "[concat('https://', parameters('azureFunctionName'), '.azurewebsites.net/api/serveChallenge/]"
+        "azureFunctionReqUrl": "[concat('https://', parameters('azureFunctionName'), '.azurewebsites.net/api/serveChallenge/']"
         
     },
     "resources": [{
