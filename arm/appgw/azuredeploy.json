@@ -5,7 +5,7 @@
         "applicationGatewaySubnetId":{
             "type": "string"
         },
-        "azureFunctionReqUrl":{
+        "azureFunctionName":{
             "type": "string"
         },
         "skuName":{
@@ -31,7 +31,8 @@
         "applicationGatewayName": "appgw",
         "applicationGatewayPublicIpName": "appgwpublicip",
         "applicationGatewayPublicIpId": "[resourceId('Microsoft.Network/publicIPAddresses',variables('applicationGatewayPublicIpName'))]",
-        "applicationGatewayId": "[resourceId('Microsoft.Network/applicationGateways', variables('applicationGatewayName'))]"
+        "applicationGatewayId": "[resourceId('Microsoft.Network/applicationGateways', variables('applicationGatewayName'))]",
+        "azureFunctionReqUrl": "[concat('https://', parameters('azureFunctionName'), '.azurewebsites.net/api/serveChallenge/]"
         
     },
     "resources": [{
@@ -226,7 +227,7 @@
                     "name": "letsencryptRedirect",
                     "properties": {
                         "redirectType": "Permanent",
-                        "targetUrl": "[parameters('azureFunctionReqUrl')]",
+                        "targetUrl": "[variables('azureFunctionReqUrl')]",
                         "includeQueryString": true,
                         "urlPathMaps": [
                             {

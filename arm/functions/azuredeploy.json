@@ -23,6 +23,7 @@
     },
     "appGwName": {
       "type": "string",
+      "defaultValue": "appgw",
       "metadata": {
         "description": "Resource name of application gateway"
       }
@@ -44,7 +45,7 @@
     "keyVaultName": {
       "type": "string",
       "metadata": {
-        "description": "Resourc name of the keyvault"
+        "description": "Resource name of the keyvault"
       }
     }
   },
@@ -81,11 +82,11 @@
       }
     },
     {
-      "apiVersion": "2015-08-01",
+      "apiVersion": "2016-08-01",
       "type": "Microsoft.Web/sites",
       "name": "[variables('functionAppName')]",
       "location": "[parameters('location')]",
-      "kind": "functionapp",
+      "kind": "functionapp,linux,docker",
       "identity": {
         "type": "SystemAssigned"
       },    

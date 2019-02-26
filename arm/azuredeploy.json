@@ -1,0 +1,171 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": ""
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "type": "string",
+            "metadata": {
+                "description": ""
+            }
+        },
+        "rgName": {
+            "type": "string",
+            "metadata": {
+                "description": "The resource group name"
+            }
+        },
+        "rgLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "Location for deployment"
+            }
+        },
+        "azureFunctionName": {
+            "type": "string"
+        },
+        "appGWDnsName": {
+            "type": "string",
+            "metadata": {
+                "description": "DNS prefix used by the app gateway IP"
+            }
+        },
+        "appGwSslEmail": {
+            "type": "string",
+            "defaultValue": "user@exampledomain.com"
+        },
+        "keyVaultName": {
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2018-05-01",
+            "location": "[parameters('rgLocation')]",
+            "name": "[parameters('rgName')]",
+            "properties": {}
+        },
+        {
+            "resourceGroup": "[parameters('rgName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "vnet",
+            "dependsOn": [
+                "[parameters('rgName')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/vnet/azuredeploy.json', parameters('_artifactsLocationSasToken'))]",
+                    "contentVersion": "1.0.0.0"
+                }
+            }
+        },
+        {
+            "resourceGroup": "[parameters('rgName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "appgw",
+            "dependsOn": [
+                "vnet"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/appgw/azuredeploy.json', parameters('_artifactsLocationSasToken'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters":{  
+                    "applicationGatewaySubnetId": {
+                        "value": "[reference('vnet').outputs.appgwSubnetId.value]"
+                    },
+                    "azureFunctionName": {
+                        "value": "[parameters('azureFunctionName')]"
+                    },
+                    "dnsNamePrefix":{
+                        "value": "[parameters('appGWDnsName')]"
+                    }
+                }
+            }
+        },
+        {
+            "resourceGroup": "[parameters('rgName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "keyvault",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/keyvault/azuredeploy.json', parameters('_artifactsLocationSasToken'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters":{  
+                    "keyVaultName": {
+                        "value": "[parameters('keyVaultName')]"
+                    }
+                }
+            }
+        },
+        {
+            "resourceGroup": "[parameters('rgName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "functions",
+            "dependsOn": ["appgw", "keyvault"],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/functions/azuredeploy.json', parameters('_artifactsLocationSasToken'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "appName": {
+                        "value": "[parameters('azureFunctionName')]"
+                    },
+                    "appGwDomain": {
+                        "value": "[reference('appgw').outputs.fqdn.value]"
+                    },
+                    "appGwSslEmail": {
+                        "value": "[parameters('appGwSslEmail')]"
+                    },
+                    "keyVaultName": {
+                        "value": "[parameters('keyVaultName')]"
+                    }
+                }
+            }
+        },
+        {
+            "resourceGroup": "[parameters('rgName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "functions",
+            "dependsOn": ["appgw", "keyvault", "functions"],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/msi/azuredeploy.json', parameters('_artifactsLocationSasToken'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vaultName": {
+                        "value": "[parameters('keyVaultName')]"
+                    },
+                    "objectId": {
+                        "value": "[reference('functions').outputs.principalId.value]"
+                    },
+                    "tenantId": {
+                        "value": "[reference('functions').outputs.tenantId.value]"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
