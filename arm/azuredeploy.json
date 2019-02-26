@@ -94,7 +94,9 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
             "name": "keyvault",
-            "dependsOn": [],
+            "dependsOn": [
+                "[parameters('rgName')]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
