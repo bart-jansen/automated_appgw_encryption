@@ -4,12 +4,7 @@
     "parameters": {
         "_artifactsLocation": {
             "type": "string",
-            "metadata": {
-                "description": ""
-            }
-        },
-        "_artifactsLocationSasToken": {
-            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/bart-jansen/automated_appgw_encryption/master/arm/",
             "metadata": {
                 "description": ""
             }
@@ -62,7 +57,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(parameters('_artifactsLocation'), '/vnet/azuredeploy.json', parameters('_artifactsLocationSasToken'))]",
+                    "uri": "[concat(parameters('_artifactsLocation'), '/vnet/azuredeploy.json')]",
                     "contentVersion": "1.0.0.0"
                 }
             }
@@ -78,7 +73,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(parameters('_artifactsLocation'), '/appgw/azuredeploy.json', parameters('_artifactsLocationSasToken'))]",
+                    "uri": "[concat(parameters('_artifactsLocation'), '/appgw/azuredeploy.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters":{  
@@ -103,7 +98,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(parameters('_artifactsLocation'), '/keyvault/azuredeploy.json', parameters('_artifactsLocationSasToken'))]",
+                    "uri": "[concat(parameters('_artifactsLocation'), '/keyvault/azuredeploy.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters":{  
@@ -122,7 +117,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(parameters('_artifactsLocation'), '/functions/azuredeploy.json', parameters('_artifactsLocationSasToken'))]",
+                    "uri": "[concat(parameters('_artifactsLocation'), '/functions/azuredeploy.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -145,12 +140,12 @@
             "resourceGroup": "[parameters('rgName')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
-            "name": "functions",
+            "name": "msi",
             "dependsOn": ["appgw", "keyvault", "functions"],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(parameters('_artifactsLocation'), '/msi/azuredeploy.json', parameters('_artifactsLocationSasToken'))]",
+                    "uri": "[concat(parameters('_artifactsLocation'), '/msi/azuredeploy.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
