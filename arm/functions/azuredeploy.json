@@ -55,7 +55,8 @@
     "repoBranch": "master",
     "functionAppName": "[parameters('appName')]",
     "hostingPlanName": "[concat(parameters('appName'), '-plan')]",
-    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]"
+    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]",
+    "functionReqName": "requestCertificate"
   },
   "resources": [
     {
@@ -95,9 +96,9 @@
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "clientAffinityEnabled": false,
         "reserved": true,
-        "containerSize": 1536,
         "siteConfig": {
-          "alwaysOn": true
+          "alwaysOn": true,
+          "linuxFxVersion": "DOCKER|microsoft/azure-functions-node8:2.0"
         }
       },
       "dependsOn": [
@@ -115,7 +116,6 @@
           ],
           "properties": {
             "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1,';')]",
-            "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1,';')]",
             "FUNCTIONS_EXTENSION_VERSION": "~2",
             "AzureWebJobsSecretStorageType": "files",
             "FUNCTIONS_WORKER_RUNTIME": "node",
