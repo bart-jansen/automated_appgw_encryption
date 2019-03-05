@@ -4,10 +4,7 @@
     "parameters": {
         "_artifactsLocation": {
             "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/bart-jansen/automated_appgw_encryption/master/arm/",
-            "metadata": {
-                "description": ""
-            }
+            "defaultValue": "https://raw.githubusercontent.com/bart-jansen/automated_appgw_encryption/master/arm/"
         },
         "rgName": {
             "type": "string",
@@ -21,9 +18,6 @@
                 "description": "Location for deployment"
             }
         },
-        "azureFunctionName": {
-            "type": "string"
-        },
         "appGWDnsName": {
             "type": "string",
             "metadata": {
@@ -33,10 +27,10 @@
         "appGwSslEmail": {
             "type": "string",
             "defaultValue": "user@exampledomain.com"
-        },
-        "keyVaultName": {
-            "type": "string"
         }
+    },
+    "variables": {
+        "functionAppName": "[concat('appgwfn-', uniquestring(parameters('appGWDnsName)))]"
     },
     "resources": [
         {
@@ -81,7 +75,7 @@
                         "value": "[reference('vnet').outputs.appgwSubnetId.value]"
                     },
                     "azureFunctionName": {
-                        "value": "[parameters('azureFunctionName')]"
+                        "value": "[variables('functionAppName')]"
                     },
                     "dnsNamePrefix":{
                         "value": "[parameters('appGWDnsName')]"
@@ -102,11 +96,6 @@
                 "templateLink": {
                     "uri": "[concat(parameters('_artifactsLocation'), '/keyvault/azuredeploy.json')]",
                     "contentVersion": "1.0.0.0"
-                },
-                "parameters":{  
-                    "keyVaultName": {
-                        "value": "[parameters('keyVaultName')]"
-                    }
                 }
             }
         },
@@ -124,7 +113,7 @@
                 },
                 "parameters": {
                     "appName": {
-                        "value": "[parameters('azureFunctionName')]"
+                        "value": "[variables('functionAppName')]"
                     },
                     "appGwDomain": {
                         "value": "[reference('appgw').outputs.fqdn.value]"
@@ -133,7 +122,7 @@
                         "value": "[parameters('appGwSslEmail')]"
                     },
                     "keyVaultName": {
-                        "value": "[parameters('keyVaultName')]"
+                        "value": "[reference('keyvault').outputs.keyVaultName.value]"
                     }
                 }
             }
@@ -152,17 +141,19 @@
                 },
                 "parameters": {
                     "vaultName": {
-                        "value": "[parameters('keyVaultName')]"
+                        "value": "[reference('keyvault').outputs.keyVaultName.value]"
                     },
                     "objectId": {
                         "value": "[reference('functions').outputs.principalId.value]"
-                    },
-                    "tenantId": {
-                        "value": "[reference('functions').outputs.tenantId.value]"
                     }
                 }
             }
         }
     ],
-    "outputs": {}
+    "outputs": {
+        "fqdn": {
+            "type":"string",
+            "value": "[reference('appgw').outputs.fqdn.value]"
+        }
+    }
 }

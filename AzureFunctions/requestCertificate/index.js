@@ -384,7 +384,7 @@ module.exports = function (context, req) {
             this.sendSignedRequest(finalizationUrl, JSON.stringify(payload), function (error, result) {
                 if (error) return callback('Network error when signing certificate: ' + error.message);
                 // 429 means we reached the cert limit for this domain
-                if (result.statusCode !== 200) return callback('Failed to sign certificate. Expecting 200, got %s %s', result.statusCode, result.text);
+                if (result.statusCode !== 200) return callback('Failed to sign certificate. Expecting 200, got ' + result.statusCode + ' ' + result.text);
 
                 return callback(null);
             });

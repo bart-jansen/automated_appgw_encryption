@@ -79,8 +79,8 @@
         "reserved": true
       },
       "sku": {
-        "name": "S1",
-        "tier": "Standard"
+        "name": "B1",
+        "tier": "Basic"
       }
     },
     {
@@ -95,7 +95,6 @@
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "clientAffinityEnabled": false,
-        "reserved": true,
         "siteConfig": {
           "alwaysOn": true,
           "linuxFxVersion": "DOCKER|microsoft/azure-functions-node8:2.0"
@@ -120,7 +119,7 @@
             "AzureWebJobsSecretStorageType": "files",
             "FUNCTIONS_WORKER_RUNTIME": "node",
             "WEBSITE_NODE_DEFAULT_VERSION": "10.14.1",
-            "PROJECT": "[variables('repoFolder')]",
+            "Project": "[variables('repoFolder')]",
             "APPGW_DOMAIN": "[parameters('appGwDomain')]",
             "APPGW_NAME": "[parameters('appGwName')]",
             "APPGW_RG": "[parameters('appGwRg')]",
@@ -134,6 +133,8 @@
           "type": "sourcecontrols",
           "dependsOn": [
             "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]",
+            "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
             "appsettings"
           ],
           "properties": {
@@ -148,10 +149,6 @@
   "outputs": {
     "principalId": {
       "value": "[reference(concat('Microsoft.Web/sites/', variables('functionAppName')), '2016-08-01', 'Full').identity.principalId]",
-      "type": "string"
-    },
-    "tenantId": {
-      "value": "[subscription().tenantId]",
       "type": "string"
     }
   }

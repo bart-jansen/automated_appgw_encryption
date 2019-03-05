@@ -263,10 +263,6 @@
         ]
     }],
     "outputs": {
-        "appgwBackendAddressPoolId":{
-            "type": "string",
-            "value": "[concat(variables('applicationGatewayId'), '/backendAddressPools/appGatewayBackendPool')]"
-        },
         "fqdn": {
             "type":"string",
             "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('applicationGatewayPublicIpName'))).dnsSettings.fqdn]"

@@ -10,21 +10,14 @@
             "metadata": {
               "description": "Specifies the object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. Get it by using Get-AzADUser or Get-AzADServicePrincipal cmdlets."
             }
-        },
-        "tenantId": {
-            "type": "string",
-            "defaultValue": "[subscription().tenantId]",
-            "metadata": {
-              "description": "Specifies the Azure Active Directory tenant ID that should be used for authenticating requests to the key vault. Get it by using Get-AzSubscription cmdlet."
-            }
         }
-    
     },
     "variables": {
         "Owner": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')]",
         "roleNameGuid": "[guid(resourceGroup().id, 'appgw')]",
-        "roleScope": "[resourceGroup().id]"
-      },
+        "roleScope": "[resourceGroup().id]",
+        "tenantId": "[subscription().tenantId]"
+    },
     "resources": [
         {
             "type": "Microsoft.KeyVault/vaults/accessPolicies",
@@ -33,7 +26,7 @@
             "properties": {
                 "accessPolicies": [
                     {
-                        "tenantId": "[parameters('tenantId')]",
+                        "tenantId": "[variables('tenantId')]",
                         "objectId": "[parameters('objectId')]",
                         "permissions": {
                             "secrets": ["all"],
@@ -53,7 +46,5 @@
               "scope": "[variables('roleScope')]"
             }
           }
-    ],
-    "outputs": {
-    }
+    ]
 }
