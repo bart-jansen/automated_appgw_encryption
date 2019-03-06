@@ -28,7 +28,7 @@
     "resources": [
         {
             "type": "Microsoft.KeyVault/vaults",
-            "name": "[parameters('keyVaultName')]",
+            "name": "[variables('keyVaultName')]",
             "apiVersion": "2018-02-14",
             "location": "[parameters('location')]",
             "properties": {
