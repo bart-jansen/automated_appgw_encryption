@@ -23,7 +23,7 @@
     },
     "variables": {
         "tenantId": "[subscription().tenantId]",
-        "keyVaultName": "[concat('keyvault-', uniquestring(variables('tenantId')))]"
+        "keyVaultName": "[concat('keyvault-', uniquestring(resourceGroup().name))]"
     },
     "resources": [
         {
