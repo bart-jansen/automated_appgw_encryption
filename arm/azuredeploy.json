@@ -30,7 +30,7 @@
         }
     },
     "variables": {
-        "functionAppName": "[concat('appgwfn-', uniquestring(parameters('appGWDnsName)))]"
+        "functionAppName": "[concat('appgwfn-', uniquestring(parameters('appGWDnsName')))]"
     },
     "resources": [
         {
