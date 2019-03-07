@@ -140,6 +140,9 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
+                    "identityName": {
+                        "value": "[reference('functions').outputs.identityName.value]"
+                    },
                     "vaultName": {
                         "value": "[reference('keyvault').outputs.keyVaultName.value]"
                     },
