@@ -140,6 +140,9 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
+                    "functionAppName": {
+                        "value": "[variables('functionAppName')]"
+                    },
                     "identityName": {
                         "value": "[reference('functions').outputs.identityName.value]"
                     },
