@@ -104,7 +104,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
             "name": "functions",
-            "dependsOn": ["appgw", "keyvault"],
+            "dependsOn": ["keyvault"],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -112,11 +112,8 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "appName": {
+                    "functionAppName": {
                         "value": "[variables('functionAppName')]"
-                    },
-                    "appGwDomain": {
-                        "value": "[reference('appgw').outputs.fqdn.value]"
                     },
                     "appGwSslEmail": {
                         "value": "[parameters('appGwSslEmail')]"
@@ -131,8 +128,27 @@
             "resourceGroup": "[parameters('rgName')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
+            "name": "configure-functions",
+            "dependsOn": ["keyvault", "functions", "appgw"],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/functions/configure.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "functionAppName": {
+                        "value": "[variables('functionAppName')]"
+                    }
+                }
+            }
+        },
+        {
+            "resourceGroup": "[parameters('rgName')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
             "name": "msi",
-            "dependsOn": ["appgw", "keyvault", "functions"],
+            "dependsOn": ["appgw", "keyvault", "functions", "configure-functions"],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
