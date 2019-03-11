@@ -22,9 +22,6 @@
             "name": "[concat(parameters('functionAppName'), '/web')]",
             "type": "Microsoft.Web/sites/sourcecontrols",
             "apiVersion": "2016-08-01",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
-            ],
             "properties": {
                 "repoUrl": "[variables('repoURL')]",
                 "branch": "[variables('repoBranch')]",
