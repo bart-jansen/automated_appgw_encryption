@@ -10,7 +10,8 @@ let assert = require('assert'),
     KeyVault = require('azure-keyvault'),
     msRestAzure = require('ms-rest-azure');
 
-let ApplyCertificate = require('./ApplyCertificate');
+let ApplyCertificate = require('./ApplyCertificate'),
+    AppGwFqdn = require('./AppGwFqdn');
 
 const paths = {
     ACME_ACCOUNT_KEY_FILE: './acme.key',
@@ -550,53 +551,68 @@ module.exports = function (context, req) {
         }
     }
 
-    if ('KEYVAULT_NAME','APPGW_DOMAIN','EMAIL_CERT','APPGW_NAME','APPGW_RG' in process.env) {
-        let acme = new Acme2({
-            email: process.env.EMAIL_CERT,
-            keyVaultName: process.env.KEYVAULT_NAME,
-            prod: true
-        } || {});
-
-        const CFG_HOSTNAME = process.env.APPGW_DOMAIN,
-            CFG_DOMAIN = process.env.APPGW_DOMAIN;
-
-        acme.getCertificate(CFG_HOSTNAME, CFG_DOMAIN, function (err, cert, key) {
+    if ('KEYVAULT_NAME','EMAIL_CERT','APPGW_NAME','APPGW_RG' in process.env) {
+        let appgwFqdn = new AppGwFqdn({
+            rgName: process.env.APPGW_RG,
+            appgwName: process.env.APPGW_NAME
+        });
+    
+        appgwFqdn.getFqdn(function(err, fqdn) {
             if(err) {
-                context.log('error with getting certificate');
+                context.log('error with getting fqdn');
                 context.log(err);
                 context.done();
             }
             else {
-                context.log('got cert');
-                context.log(cert);
-                context.log('got key');
-                context.log(key);
+                context.log('got fqdn');
+                context.log(fqdn);
+          
+                let acme = new Acme2({
+                    email: process.env.EMAIL_CERT,
+                    keyVaultName: process.env.KEYVAULT_NAME,
+                    prod: true
+                } || {});
 
-                acme.convertCertificate(cert, key, 'appgw.pfx', function (err, pfx, randomCertPass) {
-                    let deployCert = new ApplyCertificate({
-                        // subscriptionId: ''
-                        rgName: process.env.APPGW_RG,
-                        appgwName: process.env.APPGW_NAME,
-                        certPath: pfx,
-                        certPwd: randomCertPass,
-                        certName: 'appgw-cert'
-                    });
+                acme.getCertificate(fqdn, fqdn, function (err, cert, key) {
+                    if(err) {
+                        context.log('error with getting certificate');
+                        context.log(err);
+                        context.done();
+                    }
+                    else {
+                        context.log('got cert');
+                        context.log(cert);
+                        context.log('got key');
+                        context.log(key);
 
-                    deployCert.applyCertFlow(function(err) {
-                        if(err) {
-                            context.log('error with applying certificate');
-                            context.log(err);
-                            context.done();
-                        }
-                        else {
-                            context.log('successfully deployed certificate')
-                            context.done();
-                        }
+                        acme.convertCertificate(cert, key, 'appgw.pfx', function (err, pfx, randomCertPass) {
+                            let deployCert = new ApplyCertificate({
+                                // subscriptionId: ''
+                                rgName: process.env.APPGW_RG,
+                                appgwName: process.env.APPGW_NAME,
+                                certPath: pfx,
+                                certPwd: randomCertPass,
+                                certName: 'appgw-cert'
+                            });
 
-                    })
+                            deployCert.applyCertFlow(function(err) {
+                                if(err) {
+                                    context.log('error with applying certificate');
+                                    context.log(err);
+                                    context.done();
+                                }
+                                else {
+                                    context.log('successfully deployed certificate')
+                                    context.done();
+                                }
+
+                            })
+
+                        });
+                    
+                    }
 
                 });
-              
             }
         });
     }
