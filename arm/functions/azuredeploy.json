@@ -47,7 +47,7 @@
         "repoURL": "https://github.com/bart-jansen/automated_appgw_encryption.git",
         "repoFolder": "AzureFunctions",
         "repoBranch": "master",
-        "hostingPlanName": "[concat(parameters('appName'), '-plan')]",
+        "hostingPlanName": "[concat(parameters('functionAppName'), '-plan')]",
         "identityName": "aci-user",
         "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]",
         "functionReqName": "requestCertificate"
