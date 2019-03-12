@@ -30,15 +30,15 @@
         }
     },
     "variables": {
-        "functionAppName": "[concat('appgwfn-', uniquestring(parameters('appGWDnsName')))]"
+        "functionAppName": "[concat('appgwfn-', uniquestring(parameters('appGWDnsName')))]",
+        "keyVaultName": "[concat('keyvault-', uniquestring(resourceGroup().name))]"
     },
     "resources": [
         {
             "type": "Microsoft.Resources/resourceGroups",
             "apiVersion": "2018-05-01",
             "location": "[parameters('rgLocation')]",
-            "name": "[parameters('rgName')]",
-            "properties": {}
+            "name": "[parameters('rgName')]"
         },
         {
             "resourceGroup": "[parameters('rgName')]",
@@ -96,6 +96,11 @@
                 "templateLink": {
                     "uri": "[concat(parameters('_artifactsLocation'), '/keyvault/azuredeploy.json')]",
                     "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "keyVaultName": {
+                        "value": "[variables('keyVaultName')]"
+                    }
                 }
             }
         },
@@ -104,7 +109,9 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
             "name": "functions",
-            "dependsOn": ["keyvault"],
+            "dependsOn": [
+                "[parameters('rgName')]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -119,7 +126,7 @@
                         "value": "[parameters('appGwSslEmail')]"
                     },
                     "keyVaultName": {
-                        "value": "[reference('keyvault').outputs.keyVaultName.value]"
+                        "value": "[variables('keyVaultName')]"
                     }
                 }
             }
@@ -163,7 +170,7 @@
                         "value": "[reference('functions').outputs.identityName.value]"
                     },
                     "vaultName": {
-                        "value": "[reference('keyvault').outputs.keyVaultName.value]"
+                        "value": "[variables('keyVaultName')]"
                     },
                     "objectId": {
                         "value": "[reference('functions').outputs.principalId.value]"
