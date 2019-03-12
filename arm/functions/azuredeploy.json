@@ -49,8 +49,7 @@
         "repoBranch": "master",
         "hostingPlanName": "[concat(parameters('functionAppName'), '-plan')]",
         "identityName": "aci-user",
-        "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]",
-        "functionReqName": "requestCertificate"
+        "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]"
     },
     "resources": [
         {
