@@ -31,7 +31,7 @@
     },
     "variables": {
         "functionAppName": "[concat('appgwfn-', uniquestring(parameters('appGWDnsName')))]",
-        "keyVaultName": "[concat('keyvault-', uniquestring(resourceGroup().name))]"
+        "keyVaultName": "[concat('keyvault-', uniquestring(parameters('appGWDnsName')))]"
     },
     "resources": [
         {
