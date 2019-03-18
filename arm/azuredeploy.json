@@ -135,27 +135,8 @@
             "resourceGroup": "[parameters('rgName')]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
-            "name": "configure-functions",
-            "dependsOn": ["keyvault", "functions", "appgw"],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[concat(parameters('_artifactsLocation'), '/functions/configure.json')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "functionAppName": {
-                        "value": "[variables('functionAppName')]"
-                    }
-                }
-            }
-        },
-        {
-            "resourceGroup": "[parameters('rgName')]",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2018-05-01",
             "name": "msi",
-            "dependsOn": ["appgw", "keyvault", "functions", "configure-functions"],
+            "dependsOn": ["appgw", "keyvault", "functions"],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
