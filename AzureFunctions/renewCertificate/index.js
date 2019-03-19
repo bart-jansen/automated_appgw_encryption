@@ -7,12 +7,16 @@ module.exports = async function (context) {
     const functionKey = process.env.reqFnKey;
     const functionName = 'requestCertificate';
 
-    if(functionAppName && functionKey && functionName) {
-        request(`https://${functionAppName}.azurewebsites.net/api/${functionName}?code=${functionKey}`,(error, response, body) => {
+    if (functionAppName && functionKey && functionName) {
+        context.log(`invoking ${functionName} function`);
+        request(`https://${functionAppName}.azurewebsites.net/api/${functionName}?code=${functionKey}`, (error, response, body) => {
             context.log('error:', error);
             context.log('statusCode:', response && response.statusCode);
             context.log('body:', body);
         });
+    }
+    else {
+        context.log(`not all env variables are defined`);
     }
 
     context.log('Renewal certificate function ran!', timeStamp);
