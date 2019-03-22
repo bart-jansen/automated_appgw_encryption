@@ -42,7 +42,7 @@ function getModulus(pem) {
 }
 
 
-module.exports = function (context, req) {
+module.exports = async function (context, req) {
     class Acme2 {
         constructor(options) {
             assert.strictEqual(typeof options, 'object');
@@ -284,7 +284,7 @@ module.exports = function (context, req) {
                     }
 
                     context.log('waitForChallenge: status is "%s %j', result.body.status, result.body);
-                    
+
                     if (result.body.status === 'pending')
                         return retryCallback('not_completed');
                     else if (result.body.status === 'valid')
