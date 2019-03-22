@@ -42,7 +42,7 @@ function getModulus(pem) {
 }
 
 
-module.exports = async function (context, req) {
+module.exports = function (context, req) {
     class Acme2 {
         constructor(options) {
             assert.strictEqual(typeof options, 'object');
@@ -207,7 +207,7 @@ module.exports = async function (context, req) {
 
             msRestAzure.loginWithAppServiceMSI({resource: 'https://vault.azure.net'}).then(credentials => {
                 const keyVaultClient = new KeyVault.KeyVaultClient(credentials);
-                
+
                 keyVaultClient.setSecret(this.keyVaultUri, secretName, secretData, {})
                     .then(kvSecretBundle => {
                         context.log("KeyVaultSecret id: '" + kvSecretBundle.id + "'.");
@@ -221,7 +221,7 @@ module.exports = async function (context, req) {
                 callback('error logging in via MSI ' + err)
             });
         }
-        
+
         prepareChallenge(hostname, domain, authorizationUrl, callback) {
             assert.strictEqual(typeof hostname, 'string');
             assert.strictEqual(typeof domain, 'string');
@@ -268,7 +268,7 @@ module.exports = async function (context, req) {
             assert.strictEqual(typeof callback, 'function');
 
             context.log('waitingForChallenge: %j', challenge);
-            
+
             async.retry({ times: 15, interval: 20000 }, function (retryCallback) {
                 context.log('waitingForChallenge: getting status');
 
@@ -552,7 +552,7 @@ module.exports = async function (context, req) {
             let randomCertPass  = Math.random().toString(36).slice(-8);
 
             safe.child_process.execSync('openssl pkcs12 -export -out ' + pfx + ' -inkey ' + key + ' -in ' + cert + ' -passout pass:' + randomCertPass)
-            
+
             callback(null, pfx, randomCertPass)
         }
     }
@@ -562,7 +562,7 @@ module.exports = async function (context, req) {
             rgName: process.env.APPGW_RG,
             appgwName: process.env.APPGW_NAME
         });
-    
+
         appgwFqdn.getFqdn(function(err, fqdn) {
             if(err) {
                 context.log('error with getting fqdn');
@@ -572,7 +572,7 @@ module.exports = async function (context, req) {
             else {
                 context.log('got fqdn');
                 context.log(fqdn);
-          
+
                 let acme = new Acme2({
                     email: process.env.EMAIL_CERT,
                     keyVaultName: process.env.KEYVAULT_NAME,
@@ -615,7 +615,7 @@ module.exports = async function (context, req) {
                             })
 
                         });
-                    
+
                     }
 
                 });
