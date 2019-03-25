@@ -162,7 +162,7 @@ module.exports = class Acme2 {
         assert.strictEqual(typeof authorization, 'object');
         assert.strictEqual(typeof callback, 'function');
 
-        this.logMsg('acmeFlow: challenges: ' + authorization);
+        this.logMsg('acmeFlow: challenges: ' + JSON.stringify(authorization));
 
         let httpChallenges = authorization.challenges.filter(function (x) { return x.type === 'http-01'; });
         if (httpChallenges.length === 0)
@@ -170,7 +170,7 @@ module.exports = class Acme2 {
 
         let challenge = httpChallenges[0];
 
-        this.logMsg('prepareHttpChallenge: preparing for challenge ' + challenge);
+        this.logMsg('prepareHttpChallenge: preparing for challenge ' + JSON.stringify(challenge));
         let keyAuthorization = this.getKeyAuthorization(challenge.token);
 
 
@@ -245,7 +245,7 @@ module.exports = class Acme2 {
         assert.strictEqual(typeof challenge, 'object');
         assert.strictEqual(typeof callback, 'function');
 
-        this.logMsg('waitingForChallenge: ' + challenge);
+        this.logMsg('waitingForChallenge: ' + JSON.stringify(challenge));
 
        async.retry({ times: 15, interval: 20000 }, (retryCallback) => {
             this.logMsg('waitingForChallenge: getting status');
@@ -261,7 +261,7 @@ module.exports = class Acme2 {
                     return retryCallback('Bad response code:' + result.statusCode);
                 }
 
-                this.logMsg('waitForChallenge: status is ' + result.body.status + ' ' + result.body);
+                this.logMsg('waitForChallenge: status is ' + result.body.status + ' ' + JSON.stringify(result.body));
 
                 if (result.body.status === 'pending') {
                     return retryCallback('not_completed');
