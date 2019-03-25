@@ -78,7 +78,7 @@ module.exports = class Acme2 {
             if (error)
                 return callback(error);
 
-            this.logMsg('sendSignedRequest: using nonce %s for url %s', nonce, url);
+            this.logMsg(`sendSignedRequest: using nonce ${nonce} for url ${url}`);
 
             let protected64 = helpers.b64(JSON.stringify(_.extend({}, header, { nonce: nonce })));
             let signer = crypto.createSign('RSA-SHA256');
@@ -162,7 +162,7 @@ module.exports = class Acme2 {
         assert.strictEqual(typeof authorization, 'object');
         assert.strictEqual(typeof callback, 'function');
 
-        this.logMsg('acmeFlow: challenges: %j', authorization);
+        this.logMsg('acmeFlow: challenges: ' + authorization);
 
         let httpChallenges = authorization.challenges.filter(function (x) { return x.type === 'http-01'; });
         if (httpChallenges.length === 0)
@@ -170,7 +170,7 @@ module.exports = class Acme2 {
 
         let challenge = httpChallenges[0];
 
-        this.logMsg('prepareHttpChallenge: preparing for challenge %j', challenge);
+        this.logMsg('prepareHttpChallenge: preparing for challenge ' + challenge);
         let keyAuthorization = this.getKeyAuthorization(challenge.token);
 
 
@@ -224,7 +224,7 @@ module.exports = class Acme2 {
         assert.strictEqual(typeof challenge, 'object'); // { type, status, url, token }
         assert.strictEqual(typeof callback, 'function');
 
-        this.logMsg('notifyChallengeReady: %s was met', challenge.url);
+        this.logMsg('notifyChallengeReady: ' + challenge.url + ' was met');
 
         const keyAuthorization = this.getKeyAuthorization(challenge.token);
         let payload = {
@@ -236,7 +236,7 @@ module.exports = class Acme2 {
             if (error)
                 return callback('Network error when notifying challenge: ' + error.message);
             if (result.statusCode !== 200)
-                return callback(util.format('Failed to notify challenge. Expecting 200, got %s %s', result.statusCode, result.text));
+                return callback('Failed to notify challenge. Expecting 200, got ' + result.statusCode + ' ' + result.text);
             callback();
         });
     }
@@ -245,23 +245,23 @@ module.exports = class Acme2 {
         assert.strictEqual(typeof challenge, 'object');
         assert.strictEqual(typeof callback, 'function');
 
-        this.logMsg('waitingForChallenge: %j', challenge);
+        this.logMsg('waitingForChallenge: ' + challenge);
 
        async.retry({ times: 15, interval: 20000 }, (retryCallback) => {
             this.logMsg('waitingForChallenge: getting status');
 
             superagent.get(challenge.url).timeout(30 * 1000).end( (error, result) => {
                 if (error && !error.response) {
-                    this.logMsg('waitForChallenge: network error getting uri %s', challenge.url);
+                    this.logMsg('waitForChallenge: network error getting uri ' + challenge.url);
                     return retryCallback(error.message); // network error
                 }
 
                 if (result.statusCode !== 200) {
-                    this.logMsg('waitForChallenge: invalid response code getting uri %s', result.statusCode);
+                    this.logMsg('waitForChallenge: invalid response code getting uri ' + result.statusCode);
                     return retryCallback('Bad response code:' + result.statusCode);
                 }
 
-                this.logMsg('waitForChallenge: status is "%s %j', result.body.status, result.body);
+                this.logMsg('waitForChallenge: status is ' + result.body.status + ' ' + result.body);
 
                 if (result.body.status === 'pending') {
                     return retryCallback('not_completed');
@@ -318,7 +318,7 @@ module.exports = class Acme2 {
                         ], function (error) {
                             iteratorCallback(error);
                             that.cleanupChallenge(hostname, challenge, function (cleanupError) {
-                                if (cleanupError) that.logMsg('acmeFlow: ignoring error when cleaning up challenge:', cleanupError);
+                                if (cleanupError) that.logMsg('acmeFlow: ignoring error when cleaning up challenge' + cleanupError);
                                 iteratorCallback(error);
                             });
                         });
@@ -339,20 +339,20 @@ module.exports = class Acme2 {
 
         if (safe.fs.existsSync(privateKeyFile)) {
             // in some old releases, csr file was corrupt. so always regenerate it
-            this.logMsg('createKeyAndCsr: reuse the key for renewal at %s', privateKeyFile);
+            this.logMsg('createKeyAndCsr: reuse the key for renewal at ' + privateKeyFile);
         } else {
             let key = safe.child_process.execSync('openssl genrsa 4096');
             if (!key) return callback('cant generate key');
             if (!safe.fs.writeFileSync(privateKeyFile, key)) return callback('cant write file');
 
-            this.logMsg('createKeyAndCsr: key file saved at %s', privateKeyFile);
+            this.logMsg('createKeyAndCsr: key file saved at ' + privateKeyFile);
         }
 
         let csrDer = safe.child_process.execSync(`openssl req -new -key ${privateKeyFile} -outform DER -subj /CN=${hostname}`);
         if (!csrDer) return callback('cant generate csr file');
         if (!safe.fs.writeFileSync(csrFile, csrDer)) return callback('cant save csr fle'); // bookkeeping
 
-        this.logMsg('createKeyAndCsr: csr file (DER) saved at %s', csrFile);
+        this.logMsg('createKeyAndCsr: csr file (DER) saved at ' + csrFile);
 
         callback(null, csrDer);
     }
@@ -389,15 +389,15 @@ module.exports = class Acme2 {
 
             superagent.get(orderUrl).timeout(30 * 1000).end( (error, result) => {
                 if (error && !error.response) {
-                    this.logMsg('waitForOrder: network error getting uri %s', orderUrl);
+                    this.logMsg('waitForOrder: network error getting uri ' + orderUrl);
                     return retryCallback(error.message); // network error
                 }
                 if (result.statusCode !== 200) {
-                    this.logMsg('waitForOrder: invalid response code getting uri %s', result.statusCode);
+                    this.logMsg('waitForOrder: invalid response code getting uri ' + result.statusCode);
                     return retryCallback('Bad response code:' + result.statusCode);
                 }
 
-                this.logMsg('waitForOrder: status is "%s %j', result.body.status, result.body);
+                this.logMsg('waitForOrder: status is ' + result.body.status + ' ' + result.body);
 
                 if (result.body.status === 'pending' || result.body.status === 'processing') return retryCallback('Not completed');
                 else if (result.body.status === 'valid' && result.body.certificate) return retryCallback(null, result.body.certificate);
@@ -420,7 +420,7 @@ module.exports = class Acme2 {
         }).timeout(30 * 1000).end((error, result) => {
             if (error && !error.response) return callback('Network error when downloading certificate');
             if (result.statusCode === 202) return callback('Retry not implemented yet');
-            if (result.statusCode !== 200) return callback(util.format('Failed to get cert. Expecting 200, got %s %s', result.statusCode, result.text));
+            if (result.statusCode !== 200) return callback('Failed to get cert. Expecting 200, got ' + result.statusCode + ' ' + result.text);
 
             const fullChainPem = result.text;
 
@@ -428,7 +428,7 @@ module.exports = class Acme2 {
             let certificateFile = path.join(outdir, `${certName}.cert`);
             if (!safe.fs.writeFileSync(certificateFile, fullChainPem)) return callback('safe error');
 
-            this.logMsg('downloadCertificate: cert file for %s saved at %s', hostname, certificateFile);
+            this.logMsg(`downloadCertificate: cert file for ${hostname} saved at ${certificateFile}`);
 
             callback();
         });
@@ -456,7 +456,7 @@ module.exports = class Acme2 {
             }]
         };
 
-        this.logMsg('newOrder: %s', hostname);
+        this.logMsg('newOrder: ' + hostname);
 
         this.sendSignedRequest(this.directory.newOrder, JSON.stringify(payload), (error, result) => {
             if (error)
@@ -466,7 +466,7 @@ module.exports = class Acme2 {
             if (result.statusCode !== 201)
                 return callback('Failed to register user. Expecting 201');
 
-            this.logMsg('newOrder: created order %s %j', hostname, result.body);
+            this.logMsg('newOrder: created order ' + hostname + ' ' + result.body);
 
             const order = result.body, orderUrl = result.headers.location;
 
