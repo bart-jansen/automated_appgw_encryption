@@ -26,7 +26,7 @@ module.exports = function (context, req) {
                     prod: true
                 });
 
-                acme.getCertificate(fqdn, fqdn, function (err, cert, key) {
+                acme.getCertificate(fqdn, function (err, cert, key) {
                     if(err) {
                         context.log('error with getting certificate');
                         context.log(err);
