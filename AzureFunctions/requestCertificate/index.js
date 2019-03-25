@@ -269,33 +269,36 @@ module.exports = function (context, req) {
 
             context.log('waitingForChallenge: %j', challenge);
 
-            async.retry({ times: 15, interval: 20000 }, function (retryCallback) {
-                context.log('waitingForChallenge: getting status');
+            // adds timeout for when function app doesn't respect retry interval very rarely
+            setTimeout(function() {
+                async.retry({ times: 15, interval: 20000 }, function (retryCallback) {
+                    context.log('waitingForChallenge: getting status');
 
-                superagent.get(challenge.url).timeout(30 * 1000).end(function (error, result) {
-                    if (error && !error.response) {
-                        context.log('waitForChallenge: network error getting uri %s', challenge.url);
-                        return retryCallback(error.message); // network error
-                    }
+                    superagent.get(challenge.url).timeout(30 * 1000).end(function (error, result) {
+                        if (error && !error.response) {
+                            context.log('waitForChallenge: network error getting uri %s', challenge.url);
+                            return retryCallback(error.message); // network error
+                        }
 
-                    if (result.statusCode !== 200) {
-                        context.log('waitForChallenge: invalid response code getting uri %s', result.statusCode);
-                        return retryCallback('Bad response code:' + result.statusCode);
-                    }
+                        if (result.statusCode !== 200) {
+                            context.log('waitForChallenge: invalid response code getting uri %s', result.statusCode);
+                            return retryCallback('Bad response code:' + result.statusCode);
+                        }
 
-                    context.log('waitForChallenge: status is "%s %j', result.body.status, result.body);
+                        context.log('waitForChallenge: status is "%s %j', result.body.status, result.body);
 
-                    if (result.body.status === 'pending')
-                        return retryCallback('not_completed');
-                    else if (result.body.status === 'valid')
-                        return retryCallback();
-                    else
-                        return retryCallback('Unexpected status: ' + result.body.status);
+                        if (result.body.status === 'pending')
+                            return retryCallback('not_completed');
+                        else if (result.body.status === 'valid')
+                            return retryCallback();
+                        else
+                            return retryCallback('Unexpected status: ' + result.body.status);
+                    });
+                }, function retryFinished(error) {
+                    // async.retry will pass 'undefined' as second arg making it unusable with async.waterfall()
+                    callback(error);
                 });
-            }, function retryFinished(error) {
-                // async.retry will pass 'undefined' as second arg making it unusable with async.waterfall()
-                callback(error);
-            });
+            }, 20000);
         }
 
         acmeFlow(hostname, domain, callback) {
