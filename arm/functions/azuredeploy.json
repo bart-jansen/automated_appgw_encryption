@@ -96,7 +96,7 @@
                 "clientAffinityEnabled": false,
                 "siteConfig": {
                     "alwaysOn": true,
-                    "linuxFxVersion": "DOCKER|mcr.microsoft.com/azure-functions/node:2.0"
+                    "linuxFxVersion": "DOCKER|leitwolf/azure-functions-node:latest"
                 }
             },
             "dependsOn": [

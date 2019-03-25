@@ -1,6 +1,7 @@
 'use strict';
 
-let util = require('util');
+let assert = require('assert'),
+    util = require('util');
 
 // urlsafe base64 encoding (jose)
 function urlBase64Encode(string) {

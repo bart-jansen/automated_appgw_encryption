@@ -90,7 +90,7 @@ module.exports = class Acme2 {
                 signature: signature64
             };
 
-            superagent.post(url).set('Content-Type', 'application/jose+json').set('User-Agent', 'acme-cloudron').send(JSON.stringify(data)).timeout(30 * 1000).end(function (error, res) {
+            superagent.post(url).set('Content-Type', 'application/jose+json').set('User-Agent', 'acme-function').send(JSON.stringify(data)).timeout(30 * 1000).end(function (error, res) {
                 if (error && !error.response)
                     return callback(error); // network errors
                 callback(null, res);
@@ -157,9 +157,8 @@ module.exports = class Acme2 {
         return token + '.' + thumbprint;
     }
 
-    prepareHttpChallenge(hostname, domain, authorization, callback) {
+    prepareHttpChallenge(hostname, authorization, callback) {
         assert.strictEqual(typeof hostname, 'string');
-        assert.strictEqual(typeof domain, 'string');
         assert.strictEqual(typeof authorization, 'object');
         assert.strictEqual(typeof callback, 'function');
 
@@ -203,9 +202,8 @@ module.exports = class Acme2 {
         });
     }
 
-    prepareChallenge(hostname, domain, authorizationUrl, callback) {
+    prepareChallenge(hostname, authorizationUrl, callback) {
         assert.strictEqual(typeof hostname, 'string');
-        assert.strictEqual(typeof domain, 'string');
         assert.strictEqual(typeof authorizationUrl, 'string');
         assert.strictEqual(typeof callback, 'function');
 
@@ -218,7 +216,7 @@ module.exports = class Acme2 {
                 return callback('Invalid response code getting authorization : ' + response.statusCode);
 
             const authorization = response.body;
-            this.prepareHttpChallenge(hostname, domain, authorization, callback);
+            this.prepareHttpChallenge(hostname, authorization, callback);
         });
     }
 
@@ -249,7 +247,7 @@ module.exports = class Acme2 {
 
         this.logMsg('waitingForChallenge: %j', challenge);
 
-       async.retry({ times: 15, interval: 20000 }, retryCallback => {
+       async.retry({ times: 15, interval: 20000 }, (retryCallback) => {
             this.logMsg('waitingForChallenge: getting status');
 
             superagent.get(challenge.url).timeout(30 * 1000).end( (error, result) => {
@@ -265,12 +263,15 @@ module.exports = class Acme2 {
 
                 this.logMsg('waitForChallenge: status is "%s %j', result.body.status, result.body);
 
-                if (result.body.status === 'pending')
+                if (result.body.status === 'pending') {
                     return retryCallback('not_completed');
-                else if (result.body.status === 'valid')
+                }
+                else if (result.body.status === 'valid') {
                     return retryCallback();
-                else
+                }
+                else {
                     return retryCallback('Unexpected status: ' + result.body.status);
+                }
             });
         }, (error) => {
             // async.retry will pass 'undefined' as second arg making it unusable with async.waterfall()
@@ -279,9 +280,8 @@ module.exports = class Acme2 {
     
     }
 
-    acmeFlow(hostname, domain, callback) {
+    acmeFlow(hostname, callback) {
         assert.strictEqual(typeof hostname, 'string');
-        assert.strictEqual(typeof domain, 'string');
         assert.strictEqual(typeof callback, 'function');
 
         if (!fs.existsSync(paths.ACME_ACCOUNT_KEY_FILE)) {
@@ -305,7 +305,7 @@ module.exports = class Acme2 {
                     return callback(error);
                 async.eachSeries(order.authorizations, function (authorizationUrl, iteratorCallback) {
                     that.logMsg(`acmeFlow: authorizing ${authorizationUrl}`);
-                    that.prepareChallenge(hostname, domain, authorizationUrl, function (error, challenge) {
+                    that.prepareChallenge(hostname, authorizationUrl, function (error, challenge) {
                         if (error)
                             return iteratorCallback(error);
                         async.waterfall([
@@ -317,7 +317,7 @@ module.exports = class Acme2 {
                             that.downloadCertificate.bind(that, hostname)
                         ], function (error) {
                             iteratorCallback(error);
-                            that.cleanupChallenge(hostname, domain, challenge, function (cleanupError) {
+                            that.cleanupChallenge(hostname, challenge, function (cleanupError) {
                                 if (cleanupError) that.logMsg('acmeFlow: ignoring error when cleaning up challenge:', cleanupError);
                                 iteratorCallback(error);
                             });
@@ -357,8 +357,8 @@ module.exports = class Acme2 {
         callback(null, csrDer);
     }
 
-    signCertificate(domain, finalizationUrl, csrDer, callback) {
-        assert.strictEqual(typeof domain, 'string');
+    signCertificate(hostname, finalizationUrl, csrDer, callback) {
+        assert.strictEqual(typeof hostname, 'string');
         assert.strictEqual(typeof finalizationUrl, 'string');
         assert(util.isBuffer(csrDer));
         assert.strictEqual(typeof callback, 'function');
@@ -371,7 +371,7 @@ module.exports = class Acme2 {
 
         this.sendSignedRequest(finalizationUrl, JSON.stringify(payload), function (error, result) {
             if (error) return callback('Network error when signing certificate: ' + error.message);
-            // 429 means we reached the cert limit for this domain
+            // 429 means we reached the cert limit for this hostname
             if (result.statusCode !== 200) return callback('Failed to sign certificate. Expecting 200, got ' + result.statusCode + ' ' + result.text);
 
             return callback(null);
@@ -434,9 +434,8 @@ module.exports = class Acme2 {
         });
     }
 
-    cleanupChallenge(hostname, domain, challenge, callback) {
+    cleanupChallenge(hostname, challenge, callback) {
         assert.strictEqual(typeof hostname, 'string');
-        assert.strictEqual(typeof domain, 'string');
         assert.strictEqual(typeof challenge, 'object');
         assert.strictEqual(typeof callback, 'function');
 
@@ -446,28 +445,28 @@ module.exports = class Acme2 {
         // todo: remove secret from keyvault
     }
 
-    newOrder(domain, callback) {
-        assert.strictEqual(typeof domain, 'string');
+    newOrder(hostname, callback) {
+        assert.strictEqual(typeof hostname, 'string');
         assert.strictEqual(typeof callback, 'function');
 
         let payload = {
             identifiers: [{
                 type: 'dns',
-                value: domain
+                value: hostname
             }]
         };
 
-        this.logMsg('newOrder: %s', domain);
+        this.logMsg('newOrder: %s', hostname);
 
         this.sendSignedRequest(this.directory.newOrder, JSON.stringify(payload), (error, result) => {
             if (error)
-                return callback('Network error when registering domain: ' + error.message);
+                return callback('Network error when registering hostname: ' + error.message);
             if (result.statusCode === 403)
                 return callback(result.body.detail);
             if (result.statusCode !== 201)
                 return callback('Failed to register user. Expecting 201');
 
-            this.logMsg('newOrder: created order %s %j', domain, result.body);
+            this.logMsg('newOrder: created order %s %j', hostname, result.body);
 
             const order = result.body, orderUrl = result.headers.location;
 
@@ -502,9 +501,8 @@ module.exports = class Acme2 {
         });
     }
 
-    getCertificate(hostname, domain, callback) {
+    getCertificate(hostname, callback) {
         assert.strictEqual(typeof hostname, 'string');
-        assert.strictEqual(typeof domain, 'string');
         assert.strictEqual(typeof callback, 'function');
 
         this.logMsg(`getCertificate: start acme flow for ${hostname} from ${this.caDirectory}`);
@@ -513,7 +511,7 @@ module.exports = class Acme2 {
             if (dirError)
                 return callback(dirError);
 
-            this.acmeFlow(hostname, domain, (error) => {
+            this.acmeFlow(hostname, (error) => {
                 if (error) return callback(error);
                 let outdir = paths.APP_CERTS_DIR;
                 const certName = hostname.replace('*.', '_.');
