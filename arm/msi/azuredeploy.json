@@ -104,7 +104,7 @@
                         }
                     }
                 ],
-                "restartPolicy": "Never",
+                "restartPolicy": "OnFailure",
                 "osType": "Linux"
             }
         }
