@@ -1,3 +1,5 @@
+'use strict';
+
 let Acme2 = require('./Acme2'),
     ApplyCertificate = require('./ApplyCertificate'),
     AppGwFqdn = require('./AppGwFqdn');
