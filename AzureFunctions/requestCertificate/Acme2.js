@@ -397,7 +397,7 @@ module.exports = class Acme2 {
                     return retryCallback('Bad response code:' + result.statusCode);
                 }
 
-                this.logMsg('waitForOrder: status is ' + result.body.status + ' ' + result.body);
+                this.logMsg('waitForOrder: status is ' + result.body.status + ' ' + JSON.stringify(result.body));
 
                 if (result.body.status === 'pending' || result.body.status === 'processing') return retryCallback('Not completed');
                 else if (result.body.status === 'valid' && result.body.certificate) return retryCallback(null, result.body.certificate);
@@ -466,7 +466,7 @@ module.exports = class Acme2 {
             if (result.statusCode !== 201)
                 return callback('Failed to register user. Expecting 201');
 
-            this.logMsg('newOrder: created order ' + hostname + ' ' + result.body);
+            this.logMsg('newOrder: created order ' + hostname + ' ' + JSON.stringify(result.body));
 
             const order = result.body, orderUrl = result.headers.location;
 
