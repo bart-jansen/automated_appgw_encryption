@@ -1,7 +1,25 @@
 # Automated Application Gateway SSL encryption
-Even though Azure Web Apps have several tools and extensions available to provide automated SSL encryption, Application Gateways don't have that same luxury. Since there is no VM or webserver available to request a certificate and validate the ACME challenge, the process with Application Gateways gets a little more complicated.
+Even though Azure Web Apps have several tools and extensions available to provide automated SSL encryption, Application Gateways don't have that same luxury. Since there is no virtual machine or webserver available to request a certificate and validate the ACME challenge, the process with Application Gateways gets a little more complicated.
 
 This repository is currently under active development
+
+## Deploy to Azure
+
+### With the Portal
+
+Click the following link the ensure you fill in the parameters according to their descriptions.
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbart-jansen%2Fautomated_appgw_encryption%2Fmaster%2Farm%2Fazuredeploy.json" target="_blank">
+    <img src="http://azuredeploy.net/deploybutton.png"/>
+</a>
+
+### With `az cli`
+
+1. Clone the repository and move into the `arm` directory with `cd ./arm`.
+2. Using your editor fill in the `azuredeploy.parameters.json` with the required parameters
+   > Note: `_artifactsLocation` should be set to the correct `raw.github.com` address for the branch you want to deploy.
+3. Run `az deployment create --location westeurope --template-file azuredeploy.json --parameters @azuredeploy.parameters.json --name MyDeploymentNameHere --parameters`
+
 
 ## Proposed solution
 The proposed architecture and flow are shown in the figure below.
