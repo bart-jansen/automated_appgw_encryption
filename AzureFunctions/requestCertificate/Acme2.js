@@ -9,6 +9,7 @@ let assert = require('assert'),
     superagent = require('superagent'),
     util = require('util'),
     _ = require('underscore'),
+    forge = require('node-forge'),
     KeyVault = require('azure-keyvault'),
     msRestAzure = require('ms-rest-azure');
 
@@ -286,7 +287,8 @@ module.exports = class Acme2 {
 
         if (!fs.existsSync(paths.ACME_ACCOUNT_KEY_FILE)) {
             this.logMsg('getCertificate: generating acme account key on first run');
-            this.accountKeyPem = safe.child_process.execSync('openssl genrsa 4096');
+            let forgeKey = forge.pki.rsa.generateKeyPair(4096);
+            this.accountKeyPem = forge.pki.privateKeyToPem(forgeKey.privateKey);
             if (!this.accountKeyPem)
                 return callback('cant gen certificate');
             safe.fs.writeFileSync(paths.ACME_ACCOUNT_KEY_FILE, this.accountKeyPem);
@@ -332,23 +334,33 @@ module.exports = class Acme2 {
         assert.strictEqual(typeof hostname, 'string');
         assert.strictEqual(typeof callback, 'function');
 
-        let outdir = paths.APP_CERTS_DIR;
+        let key = {}, outdir = paths.APP_CERTS_DIR;
         const certName = hostname.replace('*.', '_.');
         let csrFile = path.join(outdir, `${certName}.csr`);
         let privateKeyFile = path.join(outdir, `${certName}.key`);
 
         if (safe.fs.existsSync(privateKeyFile)) {
-            // in some old releases, csr file was corrupt. so always regenerate it
             this.logMsg('createKeyAndCsr: reuse the key for renewal at ' + privateKeyFile);
+            let keyFile = fs.readFileSync(privateKeyFile);
+            key.privateKey = forge.pki.privateKeyFromPem(keyFile);
+            key.publicKey = forge.pki.rsa.setPublicKey(key.privateKey.n, key.privateKey.e);
         } else {
-            let key = safe.child_process.execSync('openssl genrsa 4096');
+            let forgeKey = forge.pki.rsa.generateKeyPair(4096);
+            key = forge.pki.privateKeyToPem(forgeKey.privateKey);
+
             if (!key) return callback('cant generate key');
             if (!safe.fs.writeFileSync(privateKeyFile, key)) return callback('cant write file');
 
             this.logMsg('createKeyAndCsr: key file saved at ' + privateKeyFile);
         }
 
-        let csrDer = safe.child_process.execSync(`openssl req -new -key ${privateKeyFile} -outform DER -subj /CN=${hostname}`);
+        let csr = forge.pki.createCertificationRequest();
+        csr.publicKey = key.publicKey;
+        csr.setSubject([{shortName: 'CN', value: hostname}]);
+        csr.sign(key.privateKey);
+        let csrDer = forge.asn1.toDer(pki.certificationRequestToAsn1(csr)).getBytes();
+
+        // let csrDer = safe.child_process.execSync(`openssl req -new -key ${privateKeyFile} -outform DER -subj /CN=${hostname}`);
         if (!csrDer) return callback('cant generate csr file');
         if (!safe.fs.writeFileSync(csrFile, csrDer)) return callback('cant save csr fle'); // bookkeeping
 
@@ -528,7 +540,17 @@ module.exports = class Acme2 {
 
         let randomCertPass  = Math.random().toString(36).slice(-8);
 
-        safe.child_process.execSync('openssl pkcs12 -export -out ' + pfx + ' -inkey ' + key + ' -in ' + cert + ' -passout pass:' + randomCertPass)
+        var privFile = fs.readFileSync(path.join(paths.APP_CERTS_DIR, key));
+        var certFile = fs.readFileSync(path.join(paths.APP_CERTS_DIR, cert));
+        var forgeKey = forge.pki.privateKeyFromPem(privFile);
+        var forgeCert = forge.pki.certificateFromPem(certFile);
+        
+        var p12Asn1 = forge.pkcs12.toPkcs12Asn1(forgeKey, forgeCert, randomCertPass);
+        var p12Der = forge.asn1.toDer(p12Asn1).getBytes();
+        
+        fs.writeFileSync(path.join(paths.APP_CERTS_DIR, pfx), p12Der, {encoding: 'binary'});
+
+        // safe.child_process.execSync('openssl pkcs12 -export -out ' + pfx + ' -inkey ' + key + ' -in ' + cert + ' -passout pass:' + randomCertPass);
 
         callback(null, pfx, randomCertPass)
     }

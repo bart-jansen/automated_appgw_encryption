@@ -15,6 +15,7 @@
         "azure-keyvault": "^3.0.4",
         "crypto": "^1.0.1",
         "ms-rest-azure": "^2.6.0",
+        "node-forge": "^0.8.2",
         "safetydance": "^0.7.1",
         "superagent": "^4.1.0",
         "underscore": "^1.9.1"
