@@ -46,7 +46,7 @@
     "variables": {
         "repoURL": "https://github.com/bart-jansen/automated_appgw_encryption.git",
         "repoFolder": "AzureFunctions",
-        "repoBranch": "master",
+        "repoBranch": "dev",
         "hostingPlanName": "[concat(parameters('functionAppName'), '-plan')]",
         "identityName": "aci-user",
         "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]"
@@ -72,10 +72,8 @@
             "apiVersion": "2018-02-01",
             "name": "[variables('hostingPlanName')]",
             "location": "[parameters('location')]",
-            "kind": "linux",
             "properties": {
-                "name": "[variables('hostingPlanName')]",
-                "reserved": true
+                "name": "[variables('hostingPlanName')]"
             },
             "sku": {
                 "name": "P1v2",
@@ -87,7 +85,7 @@
             "type": "Microsoft.Web/sites",
             "name": "[parameters('functionAppName')]",
             "location": "[parameters('location')]",
-            "kind": "functionapp,linux",
+            "kind": "functionapp",
             "identity": {
                 "type": "SystemAssigned"
             },
@@ -95,8 +93,7 @@
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                 "clientAffinityEnabled": false,
                 "siteConfig": {
-                    "alwaysOn": true,
-                    "linuxFxVersion": "DOCKER|mcr.microsoft.com/azure-functions/node:2.0"
+                    "alwaysOn": true
                 }
             },
             "dependsOn": [
