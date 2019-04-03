@@ -25,7 +25,7 @@ Click the following link the ensure you fill in the parameters according to thei
 The proposed architecture and flow are shown in the figure below.
 ![](img/architecture-ssl-gateways.png)
 
-Apart from the Application Gateway you therefore need to deploy 2 Azure Functions and an Azure KeyVault. The flow is described in more detail below:
+Apart from the Application Gateway you therefore need to deploy an Azure Functions app and an Azure KeyVault. The flow is described in more detail below:
 1. Time-triggered Azure Function requests a certifate for domain.com to the letsencrypt servers
 2. The letsencrypt servers send a challenge back to the Azure Function
 3. The Azure function stores this challenge in Azure Keyvault where the other Azure Function can read it from
