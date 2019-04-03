@@ -334,7 +334,7 @@ module.exports = class Acme2 {
         assert.strictEqual(typeof hostname, 'string');
         assert.strictEqual(typeof callback, 'function');
 
-        let key = {}, outdir = paths.APP_CERTS_DIR;
+        let forgeKey = {}, outdir = paths.APP_CERTS_DIR;
         const certName = hostname.replace('*.', '_.');
         let csrFile = path.join(outdir, `${certName}.csr`);
         let privateKeyFile = path.join(outdir, `${certName}.key`);
@@ -342,8 +342,8 @@ module.exports = class Acme2 {
         if (safe.fs.existsSync(privateKeyFile)) {
             this.logMsg('createKeyAndCsr: reuse the key for renewal at ' + privateKeyFile);
             let keyFile = fs.readFileSync(privateKeyFile);
-            key.privateKey = forge.pki.privateKeyFromPem(keyFile);
-            key.publicKey = forge.pki.rsa.setPublicKey(key.privateKey.n, key.privateKey.e);
+            forgeKey.privateKey = forge.pki.privateKeyFromPem(keyFile);
+            forgeKey.publicKey = forge.pki.rsa.setPublicKey(forgeKey.privateKey.n, forgeKey.privateKey.e);
         } else {
             let forgeKey = forge.pki.rsa.generateKeyPair(4096);
             key = forge.pki.privateKeyToPem(forgeKey.privateKey);
@@ -355,10 +355,10 @@ module.exports = class Acme2 {
         }
 
         let csr = forge.pki.createCertificationRequest();
-        csr.publicKey = key.publicKey;
+        csr.publicKey = forgeKey.publicKey;
         csr.setSubject([{shortName: 'CN', value: hostname}]);
-        csr.sign(key.privateKey);
-        let csrDer = forge.asn1.toDer(pki.certificationRequestToAsn1(csr)).getBytes();
+        csr.sign(forgeKey.privateKey);
+        let csrDer = forge.asn1.toDer(forge.pki.certificationRequestToAsn1(csr)).getBytes();
 
         // let csrDer = safe.child_process.execSync(`openssl req -new -key ${privateKeyFile} -outform DER -subj /CN=${hostname}`);
         if (!csrDer) return callback('cant generate csr file');
