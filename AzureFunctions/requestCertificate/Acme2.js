@@ -345,7 +345,7 @@ module.exports = class Acme2 {
             forgeKey.privateKey = forge.pki.privateKeyFromPem(keyFile);
             forgeKey.publicKey = forge.pki.rsa.setPublicKey(forgeKey.privateKey.n, forgeKey.privateKey.e);
         } else {
-            let forgeKey = forge.pki.rsa.generateKeyPair(4096);
+            forgeKey = forge.pki.rsa.generateKeyPair(4096);
             key = forge.pki.privateKeyToPem(forgeKey.privateKey);
 
             if (!key) return callback('cant generate key');
