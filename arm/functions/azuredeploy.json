@@ -44,9 +44,6 @@
         }
     },
     "variables": {
-        "repoURL": "https://github.com/bart-jansen/automated_appgw_encryption.git",
-        "repoFolder": "AzureFunctions",
-        "repoBranch": "master",
         "hostingPlanName": "[concat(parameters('functionAppName'), '-plan')]",
         "identityName": "aci-user",
         "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]"
@@ -59,12 +56,12 @@
             "location": "[resourceGroup().location]"
         },
         {
+            "apiVersion": "2019-06-01",
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[variables('storageAccountName')]",
-            "apiVersion": "2015-06-15",
             "location": "[parameters('location')]",
-            "properties": {
-                "accountType": "Standard_LRS"
+            "sku": {
+                "name": "Standard_LRS"
             }
         },
         {
@@ -75,11 +72,13 @@
             "kind": "linux",
             "properties": {
                 "name": "[variables('hostingPlanName')]",
+                "numberOfWorkers": "1",
+                "workerSizeId": "0",
                 "reserved": true
             },
             "sku": {
-                "name": "P1v2",
-                "tier": "PremiumV2"
+                "name": "B1",
+                "tier": "Basic"
             }
         },
         {
@@ -87,16 +86,16 @@
             "type": "Microsoft.Web/sites",
             "name": "[parameters('functionAppName')]",
             "location": "[parameters('location')]",
-            "kind": "functionapp,linux",
             "identity": {
                 "type": "SystemAssigned"
             },
+            "kind": "functionapp,linux,container",
             "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                 "clientAffinityEnabled": false,
                 "siteConfig": {
-                    "alwaysOn": true,
-                    "linuxFxVersion": "DOCKER|mcr.microsoft.com/azure-functions/node:2.0"
+                    "appCommandLine": "",
+                    "linuxFxVersion": "DOCKER|bartmsft/appgw-ssl-fn:v1.0.0"
                 }
             },
             "dependsOn": [
@@ -114,29 +113,16 @@
                     ],
                     "properties": {
                         "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1,';')]",
+                        "WEBSITES_ENABLE_APP_SERVICE_STORAGE": "false",
+                        "DOCKER_REGISTRY_SERVER_URL": "https://index.docker.io", 
                         "FUNCTIONS_EXTENSION_VERSION": "~2",
                         "AzureWebJobsSecretStorageType": "files",
                         "FUNCTIONS_WORKER_RUNTIME": "node",
                         "WEBSITE_NODE_DEFAULT_VERSION": "10.14.1",
-                        "Project": "[variables('repoFolder')]",
                         "APPGW_NAME": "[parameters('appGwName')]",
                         "APPGW_RG": "[parameters('appGwRg')]",
                         "EMAIL_CERT": "[parameters('appGwSslEmail')]",
                         "KEYVAULT_NAME": "[parameters('keyVaultName')]"
-                    }
-                },
-                {
-                    "apiVersion": "2016-08-01",
-                    "name": "web",
-                    "type": "sourcecontrols",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
-                        "[resourceId('Microsoft.Web/sites/config', parameters('functionAppName'), 'appsettings')]"
-                    ],
-                    "properties": {
-                        "repoUrl": "[variables('repoURL')]",
-                        "branch": "[variables('repoBranch')]",
-                        "IsManualIntegration": true
                     }
                 }
             ]
