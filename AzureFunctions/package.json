@@ -1,5 +1,5 @@
 {
-    "name": "request-certificate",
+    "name": "appgw-ssl-fns",
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
@@ -15,6 +15,7 @@
         "azure-keyvault": "^3.0.4",
         "crypto": "^1.0.1",
         "ms-rest-azure": "^2.6.0",
+        "request": "^2.88.0",
         "safetydance": "^0.7.1",
         "superagent": "^4.1.0",
         "underscore": "^1.9.1"
