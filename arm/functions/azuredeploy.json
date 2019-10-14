@@ -95,7 +95,7 @@
                 "clientAffinityEnabled": false,
                 "siteConfig": {
                     "appCommandLine": "",
-                    "linuxFxVersion": "DOCKER|bartmsft/appgw-ssl-fn:v1.0.0"
+                    "linuxFxVersion": "DOCKER|bartmsft/appgw-ssl-fn:latest"
                 }
             },
             "dependsOn": [
