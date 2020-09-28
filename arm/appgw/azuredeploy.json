@@ -189,6 +189,9 @@
                 {
                     "name": "httpPath",
                     "properties": {
+                        "defaultRedirectConfiguration": {
+                            "id": "[concat(variables('applicationGatewayID'), '/redirectConfigurations/httpToHttpsRedirect')]"
+                        },
                         "pathRules":[
                             {
                                 "name": "letsencrypt",
