@@ -189,9 +189,6 @@
                 {
                     "name": "httpPath",
                     "properties": {
-                        "defaultBackendHttpSettings": {
-                            "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
-                        },            
                         "pathRules":[
                             {
                                 "name": "letsencrypt",
